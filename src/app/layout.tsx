@@ -24,15 +24,28 @@ export const metadata: Metadata = {
     title: "$FARTGIRL — The Gassiest Superheroine on the Blockchain",
     description:
       "Born from the FartBoy universe, powered by community, fueled by gas. Join the movement.",
-    images: ["/cover.png"],
+    images: [
+      {
+        url: "https://www.fartgirlsolana.com/cover.png",
+        width: 1200,
+        height: 630,
+        alt: "FartGirl - The Gassiest Superheroine",
+      },
+    ],
     type: "website",
+    url: "https://www.fartgirlsolana.com",
   },
   twitter: {
     card: "summary_large_image",
     title: "$FARTGIRL — The Gassiest Superheroine on the Blockchain",
     description:
       "Born from the FartBoy universe, powered by community, fueled by gas. Join the movement.",
-    images: ["/cover.png"],
+    images: [
+      {
+        url: "https://www.fartgirlsolana.com/cover.png",
+        alt: "FartGirl - The Gassiest Superheroine",
+      },
+    ],
   },
 };
 
