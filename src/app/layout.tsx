@@ -13,6 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://www.fartgirlsolana.com"),
   title: "$FARTGIRL — The Gassiest Superheroine on the Blockchain",
   description:
     "FartGirl is the ultimate meme coin superheroine. Born from the FartBoy universe, powered by community, fueled by gas. Join the movement.",
