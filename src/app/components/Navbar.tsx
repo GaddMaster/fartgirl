@@ -8,7 +8,6 @@ const NAV_LINKS = [
   { label: "Tokenomics", href: "#tokenomics" },
   { label: "Gallery", href: "#gallery" },
   { label: "How to Buy", href: "#how-to-buy" },
-  { label: "Roadmap", href: "#roadmap" },
   { label: "Community", href: "#community" },
 ];
 
