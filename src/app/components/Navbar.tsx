@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 
 const NAV_LINKS = [
@@ -14,11 +14,21 @@ const NAV_LINKS = [
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [fpsLabel, setFpsLabel] = useState("");
+  const fpsRef = useRef<ReturnType<typeof setInterval>>();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 50);
     window.addEventListener("scroll", onScroll);
-    return () => window.removeEventListener("scroll", onScroll);
+    fpsRef.current = setInterval(() => {
+      const f = (window as any).__GAS_FPS__ ?? 0;
+      const p = (window as any).__GAS_PTS__ ?? 0;
+      setFpsLabel(`${f} fps · ${p} pts`);
+    }, 500);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      clearInterval(fpsRef.current);
+    };
   }, []);
 
   return (
@@ -33,11 +43,13 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16 sm:h-20">
           {/* Logo */}
           <a href="#" className="flex items-center gap-2 sm:gap-3 group">
-            <div className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden border-2 border-green-400 group-hover:border-yellow-400 transition-colors">
+            <div className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-xl overflow-hidden border-2 border-green-400 group-hover:border-yellow-400 transition-colors">
               <Image
                 src="/logo.png"
                 alt="FartGirl Logo"
                 fill
+                loading="eager"
+                sizes="(max-width: 639px) 2.5rem, 3rem"
                 className="object-cover"
               />
             </div>
@@ -48,6 +60,9 @@ export default function Navbar() {
 
           {/* Desktop Nav */}
           <div className="hidden md:flex items-center gap-1">
+            <span className="px-4 py-2 bg-gradient-to-r from-green-500 to-yellow-500 text-black font-bold rounded-full text-xs tabular-nums shadow-lg shadow-green-500/25 mr-1">
+              {fpsLabel}
+            </span>
             {NAV_LINKS.map((link) => (
               <a
                 key={link.href}

@@ -16,6 +16,7 @@ export default function About() {
                 src="/cover.png"
                 alt="FartGirl character"
                 fill
+                sizes="(max-width: 767px) 100vw, (max-width: 1279px) 50vw, 28rem"
                 className="object-cover"
               />
             </div>

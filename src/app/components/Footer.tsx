@@ -12,6 +12,7 @@ export default function Footer() {
                 src="/logo.png"
                 alt="FartGirl"
                 fill
+                sizes="2.5rem"
                 className="object-cover"
               />
             </div>

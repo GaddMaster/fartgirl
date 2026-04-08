@@ -3,17 +3,21 @@ import GreenGasCanvas from "./GreenGasCanvas";
 
 export default function Hero() {
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-black">
+    <section className="relative isolate min-h-screen flex items-center justify-center overflow-hidden bg-black">
       <GreenGasCanvas />
 
+      <div className="pointer-events-none absolute inset-0 z-[2] bg-[radial-gradient(110%_70%_at_50%_100%,rgba(34,197,94,0.16),transparent_58%),radial-gradient(90%_55%_at_50%_0%,rgba(0,0,0,0.3),transparent_60%)]" />
+
       {/* Content over canvas */}
-      <div className="relative z-10 flex flex-col items-center text-center px-4 py-20 sm:py-32 gap-6 sm:gap-8">
+      <div className="relative z-20 flex flex-col items-center text-center px-4 py-20 sm:py-32 gap-6 sm:gap-8">
         {/* Logo */}
-        <div className="relative w-32 h-32 sm:w-44 sm:h-44 lg:w-56 lg:h-56 rounded-full overflow-hidden border-4 border-green-400 shadow-2xl shadow-green-500/40 animate-pulse-slow">
+        <div className="relative w-32 h-32 sm:w-44 sm:h-44 lg:w-56 lg:h-56 rounded-3xl overflow-hidden border-4 border-green-400 shadow-2xl shadow-green-500/40 animate-pulse-slow">
           <Image
             src="/logo.png"
             alt="FartGirl"
             fill
+            loading="eager"
+            sizes="(max-width: 639px) 8rem, (max-width: 1023px) 11rem, 14rem"
             className="object-cover"
             priority
           />
@@ -56,7 +60,7 @@ export default function Hero() {
       </div>
 
       {/* Bottom gradient fade */}
-      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black to-transparent z-10" />
+      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black to-transparent z-20" />
     </section>
   );
 }

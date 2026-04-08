@@ -55,6 +55,7 @@ export default function Community() {
             src="/cover.png"
             alt="FartGirl community"
             fill
+            sizes="(max-width: 639px) 80vw, 24rem"
             className="object-cover"
           />
         </div>
