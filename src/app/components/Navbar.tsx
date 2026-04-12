@@ -15,7 +15,7 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [fpsLabel, setFpsLabel] = useState("");
-  const fpsRef = useRef<ReturnType<typeof setInterval>>();
+  const fpsRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 50);
