@@ -542,6 +542,11 @@ export default function FartGirlGame() {
         for (let bgx2 = -100; bgx2 < WORLD * 1.15; bgx2 += rndI(16, 40)) {
             bgBldgs2.push({ x: bgx2, w: rndI(12, 32), h: rndI(28, 110), shade: rnd(0.15, 0.28) });
         }
+        // near-ground parallax layer (right behind foreground buildings)
+        const bgBldgs3: BgBldg[] = [];
+        for (let bgx3 = -80; bgx3 < WORLD * 1.08; bgx3 += rndI(10, 28)) {
+            bgBldgs3.push({ x: bgx3, w: rndI(8, 22), h: rndI(18, 70), shade: rnd(0.30, 0.50) });
+        }
 
         // ── NPCs with random paths ──
         const NPC_C = ["60,60,100", "100,50,50", "40,80,90", "80,70,55", "70,50,90", "50,80,60"];
@@ -1252,6 +1257,23 @@ export default function FartGirlGame() {
                     }
                 }
             }
+            // near-ground layer (parallax 0.78, right behind foreground)
+            const offX3 = camX * 0.78;
+            for (const bg of bgBldgs3) {
+                const sx = bg.x - offX3;
+                if (sx + bg.w < -10 || sx > w + 10) continue;
+                c.fillStyle = `rgba(28,28,50,${bg.shade})`;
+                c.fillRect(sx, groundY - bg.h, bg.w, bg.h);
+                c.fillStyle = `rgba(70,70,100,${bg.shade * 0.35})`;
+                c.fillRect(sx, groundY - bg.h, bg.w, 1);
+                c.fillRect(sx, groundY - bg.h, 1, bg.h);
+                c.fillStyle = `rgba(255,220,130,${bg.shade * 0.8})`;
+                for (let wy = groundY - bg.h + 4; wy < groundY - 4; wy += 8) {
+                    for (let wx = sx + 2; wx < sx + bg.w - 2; wx += 5) {
+                        if (Math.sin(wx * 3.3 + wy * 2.5) > 0.2) c.fillRect(wx, wy, 2, 3);
+                    }
+                }
+            }
         }
 
         // ── draw: alley smoker ──
@@ -1592,11 +1614,14 @@ export default function FartGirlGame() {
             c.fillStyle = "#fbbf24";
             c.fillText(coinText, w - 16, 55);
             if (investorCount >= TOTAL_CHADS && allSecuredShowUntil < 0) allSecuredShowUntil = tick + 180;
-            if (tick <= allSecuredShowUntil) {
-                c.fillStyle = "rgba(0,0,0,0.65)"; c.fillRect(0, h / 2 - 35, w, 70);
+            const allDone = investorCount >= TOTAL_CHADS && coinCount >= 8;
+            if (allDone || tick <= allSecuredShowUntil) {
+                c.fillStyle = "rgba(0,0,0,0.65)"; c.fillRect(0, h / 2 - 40, w, 80);
                 c.fillStyle = "#fbbf24"; c.font = "bold 24px sans-serif"; c.textAlign = "center";
-                if (coinCount >= 8) {
-                    c.fillText("ALL CHADS SECURED! ALL COINS COLLECTED!", w / 2, h / 2 + 8);
+                if (allDone) {
+                    c.fillText("🎉 WELL DONE! All Chads & $FG Coins Collected! 🎉", w / 2, h / 2 - 4);
+                    c.fillStyle = "rgba(251,191,36,0.6)"; c.font = "14px sans-serif";
+                    c.fillText("You've shilled $FG to the whole city!", w / 2, h / 2 + 20);
                 } else {
                     c.fillText("ALL CHADS SECURED! Find the $FG coins!", w / 2, h / 2 + 8);
                 }
