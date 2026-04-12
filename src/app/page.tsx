@@ -14,6 +14,7 @@ export default function Home() {
       <Navbar />
       <Hero />
       <About />
+      <FartGirlGame />
       <Tokenomics />
       <ImageGallery />
       <HowToBuy />
