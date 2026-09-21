@@ -21,6 +21,7 @@ export default function Footer() {
 
           {/* Links */}
           <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-400">
+            <a href="/comic" className="hover:text-green-400 transition-colors">Comic</a>
             <a href="#about" className="hover:text-green-400 transition-colors">About</a>
             <a href="#tokenomics" className="hover:text-green-400 transition-colors">Tokenomics</a>
             <a href="#gallery" className="hover:text-green-400 transition-colors">Gallery</a>

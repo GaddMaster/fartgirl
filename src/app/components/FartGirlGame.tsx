@@ -3036,7 +3036,7 @@ export default function FartGirlGame() {
                         FartGirl Shiller
                     </span>
                 </h2>
-                <p className="text-gray-400 mt-2 text-sm sm:text-base">Explore the city, find chads, shill $FARTGIRL!</p>
+                <p className="text-gray-400 mt-2 text-sm sm:text-base">Explore the city, find chads, find coins and shill $FARTGIRL!</p>
             </div>
             {/* Game card */}
             <div

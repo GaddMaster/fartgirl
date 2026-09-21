@@ -6,13 +6,18 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "seed:comics": "node --env-file=.env scripts/seed-comic-pages.mjs"
   },
   "dependencies": {
+    "@vercel/blob": "^2.8.0",
+    "lucide-react": "^1.47.0",
+    "mongodb": "^7.6.0",
     "next": "16.2.2",
     "react": "19.2.4",
     "react-dom": "19.2.4",
-    "three": "^0.183.2"
+    "three": "^0.183.2",
+    "twitter-api-v2": "^1.29.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
