@@ -59,12 +59,18 @@ export async function getXAccountStatus() {
   };
 }
 
-export async function postComicToX(text, imageBuffer, contentType) {
+export async function postComicToX(text, imageBuffer, contentType, altText) {
   const client = getClient();
   const mediaId = await client.v1.uploadMedia(imageBuffer, {
     mimeType: contentType,
     target: "tweet",
   });
+
+  if (altText) {
+    await client.v1.createMediaMetadata(mediaId, {
+      alt_text: altText,
+    });
+  }
 
   return client.v2.tweet({
     text,

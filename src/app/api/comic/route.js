@@ -11,6 +11,7 @@ import {
 } from "@/lib/comic/pages";
 import {
 	buildComicImagePrompt,
+	buildComicAltText,
 	buildComicXText,
 	generateComicImage,
 	persistComicImage,
@@ -102,11 +103,13 @@ async function handle(request) {
 		const prompt = buildComicImagePrompt(page);
 		const references = resolveComicReferences(page);
 		const text = buildComicXText(page);
+		const altText = buildComicAltText(page);
 		record("page-ready", "ok", {
 			pageId: page.pageId,
 			order: page.order,
 			referenceCount: references.length,
 			postTextLength: text.length,
+			altTextLength: altText.length,
 		});
 
 		if (preview) {
@@ -120,6 +123,7 @@ async function handle(request) {
 					pageId: page.pageId,
 					order: page.order,
 					text,
+					altText,
 					prompt,
 					references,
 				},
@@ -140,7 +144,7 @@ async function handle(request) {
 			record("blob-upload", "ok", { url: storedImage.url });
 
 			record("x-publish", "started");
-			const tweet = await postComicToX(text, image.buffer, image.contentType);
+			const tweet = await postComicToX(text, image.buffer, image.contentType, altText);
 			posted = true;
 			record("x-publish", "ok", { tweetId: tweet?.data?.id || null });
 

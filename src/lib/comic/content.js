@@ -27,6 +27,7 @@ export function buildComicImagePrompt(page) {
     imagineBaseline.prompt.full,
     stateLine,
     cleanScenePrompt(page.imagePrompt || page.sceneShort),
+    "FORMAT OVERRIDE: Generate one square comic page at exactly 1:1. Keep all panels, gutters, captions, and characters fully inside the square frame. Do not generate a portrait or 2:3 page.",
     `Do not print any series title, branding header, generation label, or metadata unless the scene explicitly requests visible text.\nNEGATIVE: ${imagineBaseline.prompt.negative}`,
   ].filter(Boolean).join("\n\n"));
 }
@@ -68,6 +69,21 @@ export function buildComicXText(page) {
   return `${prefix}${body}${suffix}`.slice(0, X_MAX_CHARS);
 }
 
+export function buildComicAltText(page) {
+  const pageNumber = Number.isInteger(page.order) && page.order > 0
+    ? page.order
+    : 1;
+  const scene = cleanScenePrompt(page.sceneShort || page.imagePrompt || "");
+  const focus = stripRetiredBranding(page.dayFocus || "");
+  const description = [
+    `Fart Girl comic page ${pageNumber}.`,
+    focus ? `${focus}.` : "",
+    scene,
+  ].filter(Boolean).join(" ");
+
+  return description.slice(0, 1000);
+}
+
 export async function generateComicImage(prompt, references) {
   if (!process.env.XAI_API_KEY) {
     throw new Error("Missing XAI_API_KEY");
@@ -91,7 +107,7 @@ export async function generateComicImage(prompt, references) {
       prompt: promptWithReferences,
       images: references.map(({ url }) => ({ url })),
       n: 1,
-      aspect_ratio: "2:3",
+      aspect_ratio: "1:1",
       response_format: "url",
     }),
   });
