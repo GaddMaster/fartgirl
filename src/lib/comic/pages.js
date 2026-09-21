@@ -87,6 +87,7 @@ export async function claimNextComicPage(claimId) {
     {
       series: "project-chloris",
       complete: false,
+      publishStatus: { $nin: ["published"] },
       $or: [
         { publishStatus: { $in: ["pending", "failed"] } },
         { publishStatus: { $exists: false } },

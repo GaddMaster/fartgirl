@@ -58,7 +58,8 @@ export function buildComicXText(page) {
     ? page.hashtags.filter((tag) => !HAS_RETIRED_BRANDING.test(tag)).join(" ")
     : "";
   const suffix = tags ? `\n\n${tags}` : "";
-  const caption = stripRetiredBranding(page.caption);
+  const caption = stripRetiredBranding(page.caption)
+    .replace(/\r?\n+/g, "\n\n");
   const maxCaptionLength = X_MAX_CHARS - prefix.length - suffix.length;
   const body = caption.length > maxCaptionLength
     ? `${caption.slice(0, Math.max(0, maxCaptionLength - 1)).trimEnd()}…`
