@@ -4,7 +4,7 @@ const imagineBaseline = {
   "version": "1.1.0",
   "series": "PROJECT CHLORIS",
   "subtitle": "PROJECT CHLORIS",
-  "aspect": "portrait",
+  "aspect": "square",
   "output": "one comic book page per generation, gutters visible",
   "how_to_use": "Keep this object in the app. For every Imagine call: prompt.full + state_lines[page.state] + page.imagePrompt. Attach reference_images.always from Vercel Blob. Add extra refs if the page names that character or place.",
   "prompt": {

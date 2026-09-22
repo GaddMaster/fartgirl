@@ -152,6 +152,7 @@ async function handle(request) {
 			await markComicPagePublished(page, {
 				tweetId: tweet?.data?.id || null,
 				generatedImageUrl: storedImage.url,
+				altText,
 			});
 			record("database-mark-published", "ok");
 

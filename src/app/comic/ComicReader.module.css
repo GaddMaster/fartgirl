@@ -84,7 +84,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 22px 84px;
+  padding: 22px 92px;
   overflow: hidden;
   touch-action: pan-y;
 }
@@ -100,9 +100,12 @@
 
 .currentPage {
   position: relative;
-  height: 100%;
-  max-height: 680px;
-  aspect-ratio: 2 / 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: min(72vw, 760px);
+  max-width: 760px;
+  aspect-ratio: 1 / 1;
   z-index: 5;
   animation: pageIn 320ms cubic-bezier(0.22, 0.61, 0.36, 1);
 }
@@ -113,8 +116,12 @@
   height: 100%;
   overflow: hidden;
   border: 1px solid rgba(232, 234, 223, 0.5);
-  background: #111511;
-  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.7), 0 0 42px rgba(69, 240, 111, 0.1);
+  background:
+    linear-gradient(180deg, rgba(11, 13, 11, 1) 0%, rgba(14, 18, 14, 1) 100%);
+  box-shadow:
+    0 24px 80px rgba(0, 0, 0, 0.7),
+    0 0 0 1px rgba(69, 240, 111, 0.18),
+    0 0 42px rgba(69, 240, 111, 0.12);
 }
 
 .comicImage {
@@ -137,11 +144,11 @@
 .sidePage {
   position: absolute;
   top: 50%;
-  width: min(20vw, 260px);
-  aspect-ratio: 2 / 3;
+  width: min(20vw, 220px);
+  aspect-ratio: 1 / 1;
   opacity: 0.28;
   filter: saturate(0.65);
-  transform: translateY(-50%) scale(0.88);
+  transform: translateY(-50%) scale(0.9);
   overflow: hidden;
 }
 
@@ -310,7 +317,11 @@
   }
 
   .reader {
-    padding: 16px 64px;
+    padding: 16px 56px;
+  }
+
+  .currentPage {
+    width: min(84vw, 640px);
   }
 
   .storyStrip {
@@ -350,13 +361,13 @@
 
   .reader {
     min-height: 0;
-    height: calc(100dvh - 272px);
-    padding: 10px 42px;
+    height: clamp(340px, 58vh, 540px);
+    padding: 10px 38px;
   }
 
   .currentPage {
-    max-width: 100%;
-    max-height: 100%;
+    width: min(84vw, 480px);
+    height: auto;
   }
 
   .arrow {
