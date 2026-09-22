@@ -66,9 +66,12 @@ export async function postComicToX(text, imageBuffer, contentType, altText) {
     target: "tweet",
   });
 
-  if (altText) {
+  const normalizedAltText = String(altText || "").trim();
+  if (normalizedAltText) {
     await client.v1.createMediaMetadata(mediaId, {
-      alt_text: altText,
+      alt_text: {
+        text: normalizedAltText.slice(0, 1000),
+      },
     });
   }
 
