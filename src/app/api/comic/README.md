@@ -1,6 +1,6 @@
 # Comic publisher API
 
-`GET /api/comic` is the page-publishing endpoint for PROJECT CHLORIS. It atomically claims the next unpublished `project-chloris` page by ascending `order`, generates one square comic page with xAI Imagine and the page's reference images, posts the caption and image to X, then marks the MongoDB document as published.
+`GET /api/comic` is the page-publishing endpoint for PROJECT CHLORIS. It atomically claims the next unpublished sequential page (`P1`, `P2`, `P3`...) by ascending `order`, generates one square comic page with xAI Imagine and the page's reference images, posts the caption and image to X, then marks the record as published. Pages are not locked to calendar days or slots.
 
 Every X post starts with `Fart Girl Comic - Page {order} 📗`, where `order` is the sequential comic page number from 1 through 1,095.
 
@@ -13,7 +13,7 @@ Vercel Cron uses `Authorization: Bearer ${CRON_SECRET}`. Manual calls may use ei
 - `GET /api/comic?preview=1` returns the next page's text, composed image prompt, and resolved references without claiming, generating, or publishing it.
 - `POST /api/comic?seed=1` idempotently inserts all 1,460 source pages (four per story day) and refreshes source fields on unpublished records. Published records and publication state are preserved.
 - `GET /api/comic/test-credentials` checks MongoDB, Blob, xAI, and X OAuth configuration without generating art or posting.
-- `GET /api/comic/daily-recap` creates one X recap only after all four pages of the next eligible story day are published. It summarizes the four captions with Grok and uploads all four images with their individual alt text.
+- `GET /api/comic/daily-recap` creates one X recap for the latest four published sequential pages. It summarizes their four captions with Grok and uploads all four images with their individual alt text.
 - `npm run seed:comics` performs the same idempotent seed directly from a trusted terminal using `.env`.
 
 ## Dependencies
@@ -26,4 +26,4 @@ Vercel Cron uses `Authorization: Bearer ${CRON_SECRET}`. Manual calls may use ei
 - Publishing gate: `COMIC_PUBLISH_ENABLED=1` must be set explicitly
 - Route auth: `CRON_SECRET`, optional `SECRET`
 
-Vercel calls `/api/comic/cron` hourly. The dispatcher uses `Europe/Dublin` so posts run at 08:00, 13:00, 17:00, and 20:00 Ireland time, while the four-page closing recap runs at 22:00 Ireland time year-round.
+Vercel calls `/api/comic/cron` hourly. The dispatcher uses `Europe/Dublin`. Set `COMIC_PUBLISH_HOURS` to a comma-separated list such as `8,13,17,20` to choose any number of daily page posts; set `COMIC_RECAP_HOUR` (default `22`) for the closing latest-four-page recap.

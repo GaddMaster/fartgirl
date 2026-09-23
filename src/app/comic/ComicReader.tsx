@@ -16,9 +16,6 @@ import styles from "./ComicReader.module.css";
 type ComicPage = {
   pageId: string;
   order: number;
-  day: number;
-  date: string;
-  slot: number;
   arcId: string;
   arcTitle: string;
   dayFocus: string;
@@ -157,13 +154,13 @@ export default function ComicReader({ pages, initialPageId }: ComicReaderProps) 
           <div className={styles.imageFrame}>
             <Image
               src={current.generatedImageUrl}
-              alt={`PROJECT CHLORIS, day ${current.day}, page ${current.slot}`}
+              alt={`PROJECT CHLORIS comic page ${current.order}`}
               fill
               priority
               sizes="(max-width: 767px) 92vw, (max-width: 1199px) 62vw, 560px"
               className={styles.comicImage}
             />
-            <div className={styles.pageStamp}>D{String(current.day).padStart(3, "0")} · P{current.slot}</div>
+            <div className={styles.pageStamp}>P{String(current.order).padStart(4, "0")}</div>
           </div>
         </article>
 
@@ -184,7 +181,7 @@ export default function ComicReader({ pages, initialPageId }: ComicReaderProps) 
       <section className={styles.storyStrip} aria-live="polite">
         <div className={styles.storyMeta}>
           <p>{current.arcId} · {current.arcTitle}</p>
-          <h2>Day {current.day}: {current.dayFocus}</h2>
+          <h2>Page {current.order}: {current.dayFocus}</h2>
         </div>
         <p className={styles.caption}>{current.caption}</p>
         <div className={styles.actions}>
@@ -223,9 +220,9 @@ export default function ComicReader({ pages, initialPageId }: ComicReaderProps) 
           aria-label="Comic page"
         />
         <div className={styles.timelineLabels}>
-          <span>Day 1</span>
-          <span>Day {current.day}</span>
-          <span>Day {pages.at(-1)?.day}</span>
+          <span>Page 1</span>
+          <span>Page {current.order}</span>
+          <span>Page {pages.at(-1)?.order}</span>
         </div>
       </div>
     </main>

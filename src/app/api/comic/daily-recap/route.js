@@ -52,8 +52,8 @@ async function handle(request) {
       return Response.json({
         ok: true,
         traceId,
-        day: claimed.recap.day,
         pageIds: claimed.recap.pageIds,
+        pageOrders: claimed.recap.pageOrders,
         tweetId: tweet?.data?.id || null,
       });
     } catch (error) {

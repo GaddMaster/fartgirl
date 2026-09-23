@@ -31,6 +31,47 @@ try {
   );
 
   const pages = getComicCatalog();
+  await collection.deleteMany({
+    series: "project-chloris",
+    publishStatus: "skipped",
+    sourcePageId: { $regex: /-P4$/ },
+  });
+
+  await collection.bulkWrite(pages.map((page) => ({
+    updateOne: {
+      filter: {
+        $or: [
+          { pageId: page.sourcePageId },
+          { sourcePageId: page.sourcePageId },
+        ],
+      },
+      update: {
+        $set: {
+          pageId: `__catalog__${page.sourcePageId}`,
+          order: page.order,
+          sourcePageId: page.sourcePageId,
+          altText: page.altText,
+          updatedAt: now,
+        },
+        $unset: {
+          day: "",
+          date: "",
+          slot: "",
+          suggestedTime: "",
+          recapEligible: "",
+          skipReason: "",
+        },
+      },
+    },
+  })), { ordered: false });
+
+  await collection.bulkWrite(pages.map((page) => ({
+    updateOne: {
+      filter: { pageId: `__catalog__${page.sourcePageId}` },
+      update: { $set: { pageId: page.pageId, order: page.order, updatedAt: now } },
+    },
+  })), { ordered: false });
+
   const insertResult = await collection.bulkWrite(pages.map((page) => ({
     updateOne: {
       filter: { pageId: page.pageId },

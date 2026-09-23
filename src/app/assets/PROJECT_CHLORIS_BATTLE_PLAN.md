@@ -2,7 +2,7 @@
 
 Series: **PROJECT CHLORIS**
 Window: **2026-09-20 → 2027-09-19**
-Cadence: **4 comic pages / day** plus one four-image closing recap post
+Cadence: a flexible sequential page queue plus one four-image closing recap post
 Files: `project_chloris.js` (`shared` + `pages[]`) and `imagine_baseline.js`
 
 ## What the coins actually are
@@ -61,7 +61,7 @@ Collection: `pages`. One document per post.
 
 Seed from `project_chloris.js`: loop `pages`, insert, then delete the array from the JS file. Keep `shared` and `imagine_baseline.js`.
 
-Next page: `{ complete: false, series: "project-chloris" }` sort `{ order: 1 }`.
+Next page: `{ complete: false, series: "project-chloris" }` sort `{ order: 1 }`. Pages are sequential (`P1`, `P2`, `P3`...) and are not bound to source dates or day slots.
 After a successful generate + post: set `complete: true`.
 
 Imagine string: `imagineBaseline.prompt.full` + `state_lines[page.state]` + `page.imagePrompt`.

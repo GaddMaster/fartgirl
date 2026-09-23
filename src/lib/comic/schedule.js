@@ -1,5 +1,11 @@
 const IRELAND_TIME_ZONE = "Europe/Dublin";
-const PUBLISH_HOURS = new Set([8, 13, 17, 20]);
+
+function parseHours(value, fallback) {
+  return new Set(String(value || fallback)
+    .split(",")
+    .map((hour) => Number(hour.trim()))
+    .filter((hour) => Number.isInteger(hour) && hour >= 0 && hour <= 23));
+}
 
 export function getIrelandComicSchedule(date = new Date()) {
   const parts = new Intl.DateTimeFormat("en-IE", {
@@ -12,9 +18,12 @@ export function getIrelandComicSchedule(date = new Date()) {
   const hour = Number(values.hour);
   const minute = Number(values.minute);
 
+  const publishHours = parseHours(process.env.COMIC_PUBLISH_HOURS, "8,13,17,20");
+  const recapHour = Number(process.env.COMIC_RECAP_HOUR || 22);
+
   if (minute !== 0) return null;
-  if (PUBLISH_HOURS.has(hour)) return "publish";
-  if (hour === 22) return "recap";
+  if (publishHours.has(hour)) return "publish";
+  if (hour === recapHour) return "recap";
   return null;
 }
 

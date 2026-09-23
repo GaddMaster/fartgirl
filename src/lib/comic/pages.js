@@ -37,6 +37,47 @@ export async function seedComicPages(seedPages) {
     { $addToSet: { hashtags: "#ProjectChloris" } },
   );
 
+  await pages.deleteMany({
+    series: "project-chloris",
+    publishStatus: "skipped",
+    sourcePageId: { $regex: /-P4$/ },
+  });
+
+  await pages.bulkWrite(seedPages.map((page) => ({
+    updateOne: {
+      filter: {
+        $or: [
+          { pageId: page.sourcePageId },
+          { sourcePageId: page.sourcePageId },
+        ],
+      },
+      update: {
+        $set: {
+          pageId: `__catalog__${page.sourcePageId}`,
+          order: page.order,
+          sourcePageId: page.sourcePageId,
+          altText: page.altText,
+          updatedAt: now,
+        },
+        $unset: {
+          day: "",
+          date: "",
+          slot: "",
+          suggestedTime: "",
+          recapEligible: "",
+          skipReason: "",
+        },
+      },
+    },
+  })), { ordered: false });
+
+  const sequentialMigration = await pages.bulkWrite(seedPages.map((page) => ({
+    updateOne: {
+      filter: { pageId: `__catalog__${page.sourcePageId}` },
+      update: { $set: { pageId: page.pageId, order: page.order, updatedAt: now } },
+    },
+  })), { ordered: false });
+
   const insertResult = await pages.bulkWrite(seedPages.map((page) => ({
     updateOne: {
       filter: { pageId: page.pageId },
@@ -76,6 +117,7 @@ export async function seedComicPages(seedPages) {
     inserted: insertResult.upsertedCount,
     existing: insertResult.matchedCount,
     syncedUnpublished: syncResult.matchedCount,
+    migratedSequential: sequentialMigration.modifiedCount,
   };
 }
 
@@ -179,9 +221,6 @@ export async function listPublishedComicPages() {
         _id: 0,
         pageId: 1,
         order: 1,
-        day: 1,
-        date: 1,
-        slot: 1,
         arcId: 1,
         arcTitle: 1,
         dayFocus: 1,
@@ -206,64 +245,54 @@ export async function listPublishedComicPages() {
 
 async function recapsCollection() {
   const recaps = await getCollection(RECAP_COLLECTION);
-  await recaps.createIndex({ series: 1, day: 1 }, { unique: true });
+  await recaps.dropIndex("series_1_day_1").catch((error) => {
+    if (error?.codeName !== "IndexNotFound") throw error;
+  });
+  await recaps.createIndex({ series: 1, recapKey: 1 }, { unique: true });
   return recaps;
 }
 
 export async function claimNextDailyRecap(claimId) {
   const pages = await collection();
   const recaps = await recapsCollection();
-  const fourthPages = await pages.find({
+  const publishedPages = await pages.find({
     series: "project-chloris",
-    slot: 4,
-    recapEligible: true,
     publishStatus: "published",
   }, {
-    projection: { day: 1, date: 1 },
-    sort: { day: 1 },
+    projection: { _id: 0, pageId: 1, order: 1, caption: 1, altText: 1, generatedImageUrl: 1 },
+    sort: { order: -1 },
   }).toArray();
+  if (publishedPages.length < 4) return null;
 
-  for (const fourthPage of fourthPages) {
-    const dayPages = await pages.find({
+  const recapPages = publishedPages.slice(0, 4).reverse();
+  const recapKey = recapPages.map((page) => page.pageId).join("-");
+  const recap = await recaps.findOneAndUpdate(
+    {
       series: "project-chloris",
-      day: fourthPage.day,
-      publishStatus: "published",
-    }, {
-      projection: { _id: 0, pageId: 1, order: 1, day: 1, date: 1, slot: 1, caption: 1, altText: 1, generatedImageUrl: 1 },
-      sort: { slot: 1 },
-    }).toArray();
-    if (dayPages.length !== 4 || ![1, 2, 3, 4].every((slot, index) => dayPages[index]?.slot === slot)) {
-      continue;
-    }
-
-    const recap = await recaps.findOneAndUpdate(
-      {
+      recapKey,
+      $or: [
+        { publishStatus: { $in: ["pending", "failed"] } },
+        { publishStatus: { $exists: false } },
+      ],
+    },
+    {
+      $set: {
         series: "project-chloris",
-        day: fourthPage.day,
-        $or: [
-          { publishStatus: { $in: ["pending", "failed"] } },
-          { publishStatus: { $exists: false } },
-        ],
+        recapKey,
+        pageIds: recapPages.map((page) => page.pageId),
+        pageOrders: recapPages.map((page) => page.order),
+        publishStatus: "processing",
+        claimId,
+        claimedAt: new Date(),
+        updatedAt: new Date(),
       },
-      {
-        $set: {
-          series: "project-chloris",
-          day: fourthPage.day,
-          date: fourthPage.date,
-          pageIds: dayPages.map((page) => page.pageId),
-          publishStatus: "processing",
-          claimId,
-          claimedAt: new Date(),
-          updatedAt: new Date(),
-        },
-        $setOnInsert: { createdAt: new Date() },
-        $inc: { publishAttempts: 1 },
-        $unset: { lastError: "" },
-      },
-      { upsert: true, returnDocument: "after", includeResultMetadata: false },
-    );
-    if (recap) return { recap, pages: dayPages };
-  }
+      $setOnInsert: { createdAt: new Date() },
+      $inc: { publishAttempts: 1 },
+      $unset: { lastError: "" },
+    },
+    { upsert: true, returnDocument: "after", includeResultMetadata: false },
+  );
+  if (recap) return { recap, pages: recapPages };
 
   return null;
 }
@@ -284,7 +313,7 @@ export async function markDailyRecapPublished(recap, result) {
     },
   );
   if (update.modifiedCount !== 1) {
-    throw new Error(`Lost daily recap claim for day ${recap.day}`);
+    throw new Error(`Lost daily recap claim for ${recap.recapKey}`);
   }
 }
 
