@@ -245,10 +245,10 @@ export async function listPublishedComicPages() {
 
 async function recapsCollection() {
   const recaps = await getCollection(RECAP_COLLECTION);
+  await recaps.createIndex({ series: 1, recapKey: 1 }, { unique: true });
   await recaps.dropIndex("series_1_day_1").catch((error) => {
     if (error?.codeName !== "IndexNotFound") throw error;
   });
-  await recaps.createIndex({ series: 1, recapKey: 1 }, { unique: true });
   return recaps;
 }
 
