@@ -84,6 +84,60 @@ export function buildComicAltText(page) {
   return description.slice(0, 1000);
 }
 
+export async function generateDailyRecap(pages) {
+  if (!process.env.XAI_API_KEY) {
+    throw new Error("Missing XAI_API_KEY");
+  }
+
+  const story = pages.map((page) => [
+    `PAGE ${page.order}:`,
+    page.caption,
+  ].join("\n")).join("\n\n");
+  const response = await fetch("https://api.x.ai/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${process.env.XAI_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: process.env.COMIC_RECAP_MODEL || "grok-4.3",
+      response_format: { type: "json_object" },
+      messages: [
+        {
+          role: "system",
+          content: "Write concise X recap posts for PROJECT CHLORIS. Return JSON only. Keep the voice intimate, cinematic, and grounded. Use 2-4 short lines separated by blank lines. Add at most two fitting emojis at line ends. End with #FartGirl #ProjectChloris. Never mention AI, prompts, page numbers, or meta commentary.",
+        },
+        {
+          role: "user",
+          content: `Summarize this four-page comic day into one X post under 280 characters:\n\n${story}`,
+        },
+      ],
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`xAI daily recap failed (${response.status}): ${(await response.text()).slice(0, 500)}`);
+  }
+
+  const payload = await response.json();
+  const raw = payload?.choices?.[0]?.message?.content || "";
+  let parsed;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    parsed = null;
+  }
+  const text = String(parsed?.text || parsed?.summary || raw)
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/```$/i, "")
+    .trim();
+  if (!text) {
+    throw new Error("xAI daily recap returned no text");
+  }
+
+  return text.slice(0, X_MAX_CHARS);
+}
+
 export async function generateComicImage(prompt, references) {
   if (!process.env.XAI_API_KEY) {
     throw new Error("Missing XAI_API_KEY");

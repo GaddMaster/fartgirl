@@ -2,7 +2,7 @@
 
 Series: **PROJECT CHLORIS**
 Window: **2026-09-20 → 2027-09-19**
-Cadence: **3 comic pages / day** = 1,095 posts
+Cadence: **4 comic pages / day** plus one four-image closing recap post
 Files: `project_chloris.js` (`shared` + `pages[]`) and `imagine_baseline.js`
 
 ## What the coins actually are

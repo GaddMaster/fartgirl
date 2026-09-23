@@ -1,6 +1,6 @@
 import { MongoClient } from "mongodb";
 
-import { pages } from "../src/app/assets/project_chloris.js";
+import { getComicCatalog } from "../src/lib/comic/catalog.js";
 
 if (!process.env.MONGODB_URI) {
   throw new Error("Missing MONGODB_URI");
@@ -30,14 +30,15 @@ try {
     { $addToSet: { hashtags: "#ProjectChloris" } },
   );
 
+  const pages = getComicCatalog();
   const insertResult = await collection.bulkWrite(pages.map((page) => ({
     updateOne: {
       filter: { pageId: page.pageId },
       update: {
         $setOnInsert: {
           ...page,
-          complete: false,
-          publishStatus: "pending",
+          complete: page.complete ?? false,
+          publishStatus: page.publishStatus || "pending",
           createdAt: now,
           updatedAt: now,
         },
@@ -56,6 +57,13 @@ try {
       },
     };
   }), { ordered: false });
+
+  await collection.bulkWrite(pages.map((page) => ({
+    updateOne: {
+      filter: { pageId: page.pageId },
+      update: { $set: { altText: page.altText, updatedAt: now } },
+    },
+  })), { ordered: false });
 
   console.log(JSON.stringify({
     total: pages.length,

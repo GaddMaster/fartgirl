@@ -1,7 +1,7 @@
 
 import { randomUUID } from "node:crypto";
 
-import { pages } from "@/app/assets/project_chloris";
+import { getComicCatalog } from "@/lib/comic/catalog";
 import {
 	claimNextComicPage,
 	markComicPageFailed,
@@ -62,7 +62,7 @@ async function handle(request) {
 	try {
 		if (shouldSeed) {
 			record("seed", "started");
-			const result = await seedComicPages(pages);
+			const result = await seedComicPages(getComicCatalog());
 			record("seed", "ok", result);
 			return Response.json({ ok: true, traceId, logs, ...result });
 		}

@@ -80,3 +80,27 @@ export async function postComicToX(text, imageBuffer, contentType, altText) {
     media: { media_ids: [mediaId] },
   });
 }
+
+export async function postComicGalleryToX(text, images) {
+  const client = getClient();
+  const mediaIds = [];
+
+  for (const image of images) {
+    const mediaId = await client.v1.uploadMedia(image.buffer, {
+      mimeType: image.contentType,
+      target: "tweet",
+    });
+    const altText = String(image.altText || "").trim();
+    if (altText) {
+      await client.v1.createMediaMetadata(mediaId, {
+        alt_text: { text: altText.slice(0, 1000) },
+      });
+    }
+    mediaIds.push(mediaId);
+  }
+
+  return client.v2.tweet({
+    text,
+    media: { media_ids: mediaIds },
+  });
+}
