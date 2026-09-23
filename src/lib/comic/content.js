@@ -3,6 +3,7 @@ import { imagineBaseline } from "@/app/assets/imagine_baseline";
 import { put } from "@vercel/blob";
 
 const X_MAX_CHARS = 280;
+const DAILY_RECAP_HEADER = "Project Chloris Daily recap";
 const RETIRED_BRANDING = /year[\s_-]*one/gi;
 const HAS_RETIRED_BRANDING = /year[\s_-]*one/i;
 
@@ -93,6 +94,8 @@ export async function generateDailyRecap(pages) {
     `PAGE ${page.order}:`,
     page.caption,
   ].join("\n")).join("\n\n");
+  const prefix = `${DAILY_RECAP_HEADER}\n\n`;
+  const maxSummaryLength = X_MAX_CHARS - prefix.length;
   const response = await fetch("https://api.x.ai/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -105,11 +108,11 @@ export async function generateDailyRecap(pages) {
       messages: [
         {
           role: "system",
-          content: "Write concise X recap posts for PROJECT CHLORIS. Return JSON only. Keep the voice intimate, cinematic, and grounded. Use 2-4 short lines separated by blank lines. Add at most two fitting emojis at line ends. End with #FartGirl #ProjectChloris. Never mention AI, prompts, page numbers, or meta commentary.",
+          content: "Write concise X recap posts for PROJECT CHLORIS. Return JSON only. Keep the voice intimate, cinematic, and grounded. Use 2-4 short lines separated by blank lines. Add at most two fitting emojis at line ends. End with #FartGirl #ProjectChloris. Do not add a title; the publisher adds it. Never mention AI, prompts, page numbers, or meta commentary.",
         },
         {
           role: "user",
-          content: `Summarize this four-page comic day into one X post under 280 characters:\n\n${story}`,
+          content: `Summarize these four comic pages into one X post under ${maxSummaryLength} characters:\n\n${story}`,
         },
       ],
     }),
@@ -127,15 +130,16 @@ export async function generateDailyRecap(pages) {
   } catch {
     parsed = null;
   }
-  const text = String(parsed?.text || parsed?.summary || raw)
+  const summary = String(parsed?.text || parsed?.summary || raw)
     .replace(/^```(?:json)?\s*/i, "")
     .replace(/```$/i, "")
+    .replace(/\r?\n+/g, "\n\n")
     .trim();
-  if (!text) {
+  if (!summary) {
     throw new Error("xAI daily recap returned no text");
   }
 
-  return text.slice(0, X_MAX_CHARS);
+  return `${prefix}${summary}`.slice(0, X_MAX_CHARS);
 }
 
 export async function generateComicImage(prompt, references) {
