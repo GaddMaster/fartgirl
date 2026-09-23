@@ -317,6 +317,24 @@ export async function markDailyRecapPublished(recap, result) {
   }
 }
 
+export async function markDailyRecapPostedUnconfirmed(recap, result, error) {
+  const recaps = await recapsCollection();
+  await recaps.updateOne(
+    { _id: recap._id, claimId: recap.claimId },
+    {
+      $set: {
+        publishStatus: "posted_unconfirmed",
+        tweetId: result.tweetId,
+        text: result.text,
+        postConfirmationError: String(error?.message || error).slice(0, 1000),
+        postedAt: new Date(),
+        updatedAt: new Date(),
+      },
+      $unset: { claimId: "", lastError: "" },
+    },
+  );
+}
+
 export async function markDailyRecapFailed(recap, error) {
   const recaps = await recapsCollection();
   await recaps.updateOne(
