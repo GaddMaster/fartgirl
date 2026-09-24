@@ -6,21 +6,34 @@ if (!uri) {
   throw new Error("Missing MONGODB_URI");
 }
 
-const options = {};
-let clientPromise;
+const options = {
+  connectTimeoutMS: 10_000,
+  serverSelectionTimeoutMS: 10_000,
+  socketTimeoutMS: 20_000,
+};
 
-if (process.env.NODE_ENV === "development") {
-  if (!globalThis._fartGirlMongoClientPromise) {
-    const client = new MongoClient(uri, options);
-    globalThis._fartGirlMongoClientPromise = client.connect();
-  }
-  clientPromise = globalThis._fartGirlMongoClientPromise;
-} else {
-  const client = new MongoClient(uri, options);
-  clientPromise = client.connect();
+function connectClient() {
+  const promise = new MongoClient(uri, options).connect();
+  // A frozen serverless instance can thaw minutes later and reject this with
+  // no awaiter yet attached; without this it crashes the whole process.
+  promise.catch(() => {});
+  return promise;
 }
 
 export async function getCollection(name) {
-  const client = await clientPromise;
+  if (!globalThis._fartGirlMongoPromise) {
+    globalThis._fartGirlMongoPromise = connectClient();
+  }
+
+  let client;
+  try {
+    client = await globalThis._fartGirlMongoPromise;
+  } catch (error) {
+    // Drop the failed connection so the next call reconnects instead of
+    // reusing a permanently rejected promise for the life of the instance.
+    globalThis._fartGirlMongoPromise = null;
+    throw error;
+  }
+
   return client.db(process.env.MONGODB_DB || "fartgirl").collection(name);
 }
