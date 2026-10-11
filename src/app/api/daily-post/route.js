@@ -79,7 +79,7 @@ const DAILY_POST_BRIEFS = {
     formats: [
       { id: "midday-pulse", name: "Midday Pulse", how: "What's moving right now and the one-line reason, plus how the vibe compares to this morning." },
       { id: "ct-temperature", name: "CT Temperature Check", how: "The main thing crypto X is arguing about today, both sides summarised fairly in a line each, then a calm Fart Girl take." },
-      { id: "explain-like-fart-girl", name: "Explain It Like Fart Girl", how: "Pick one concept surfaced by today's news and explain it in three short lines a newcomer instantly gets." },
+      { id: "explain-like-fart-girl", name: "Explain It Like Fart Girl", how: "Name today's story first (what happened + a number), then explain the one concept behind it in two or three short lines a newcomer instantly gets." },
       { id: "this-day-in-crypto", name: "This Day In Crypto", how: "A verified historical event from this calendar date, why it mattered then, and what it teaches now." },
       { id: "myth-vs-fact", name: "Myth vs Fact", how: "Debunk one claim circulating today with a verified fact. Firm, never mean." },
       { id: "solana-spotlight", name: "Solana Spotlight", how: "One real Solana ecosystem development from today, why holders should care, in plain words." },

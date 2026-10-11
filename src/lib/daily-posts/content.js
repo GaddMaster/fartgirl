@@ -42,6 +42,12 @@ ACCOUNT SAFETY (X deleted our previous 4k-follower account; protect this one)
 - No politics takes, no dunking on people or other projects, no jokes about victims of hacks, disasters or deaths.
 - Don't reuse hooks, stories or phrasing from the RECENT POSTS list.
 
+NEWS FIRST (most important writing rule)
+- The post is built around ONE specific, real story from your research, and the text must name it concretely: what happened, a number or detail, and when ("1 year ago today…", "overnight…", "this afternoon…").
+- Every claim in "facts" MUST visibly appear in "text". Don't research a great story and then leave it out; drop facts you don't use.
+- Formats, explainers, lessons and jokes are built ON the story, never instead of it. A generic explainer with no named story is a failed post.
+- When space is tight, cut filler and mood lines before you cut the story.
+
 VOICE
 - Funny, cute, comical, smart, gritty, cheeky, bold — pick the mix that fits today's story. Confident, warm, never cringe, never corporate.
 - Write as the account. Fart Girl may appear in third person as the hero of the moment ("Fart Girl clocked in before the Asia close…") or with one short quoted line. Don't overdo the roleplay; the information is the star.
@@ -103,7 +109,7 @@ function buildUserPrompt({ type, brief, format, coinFocus, clock, marketBlock, r
     "RECENT POSTS (do not repeat their stories, hooks, scenes or jokes):",
     formatRecentPosts(recent),
     "",
-    `LENGTH: the "text" field must be at most ${maxChars} characters (emojis count as 2). Aim for ${Math.round(maxChars * 0.85)}-${maxChars}.`,
+    `LENGTH: the "text" field must be at most ${maxChars} characters (emojis count as 2). Aim for ${Math.round(maxChars * 0.85)}-${maxChars}. Spend the characters on the story and the insight, not on filler.`,
     "Research first, then write. Return the JSON only.",
   ].join("\n");
 }
