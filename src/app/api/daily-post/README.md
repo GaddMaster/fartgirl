@@ -14,7 +14,11 @@ Trigger times are random within each window and stay at least 10 minutes away fr
 
 - `GET /api/daily-post/schedule`: Vercel cron at 05:00 UTC (05:00/06:00 Dublin). Creates one QStash message per type for today using `notBefore`. Deduplicated in Mongo (`daily_posts.postKey`) and with the QStash `deduplicationId`. `?dryRun=1` shows the picked times without scheduling. `?types=gm,gn` limits the run to those types.
 - `POST /api/daily-post?type=gm|gd|gn`: QStash target. Claims `{date}-{type}`, gets a live market snapshot, has Grok research (`web_search` + `x_search`) and write the post plus an image scene, validates the text for account safety, generates the image from the two reference sheets, uploads it to Blob, posts it to X, and marks it published.
-  - `?preview=1` researches and writes the post without claiming or posting. Add `&image=1` to also generate the image (saved under `daily-posts/previews/`).
+  - `?preview=1` researches and writes the post without claiming or posting. Add `&image=1` to also generate the image (saved under `daily-posts/drafts/`).
+  - Drafts: a preview saves its text and image on the day's record (`daily_posts.draft`). Every later call for the same `{date}-{type}` reuses that draft instead of calling Grok again, including the live run and the scheduled QStash run. That gives you preview → check → publish exactly what you saw. A text-only draft gets its image generated on first use.
+  - `&regenerate=1` ignores the saved draft and generates fresh content. Works with or without `preview=1`.
+  - A live run also stores what it generated, so a QStash retry reuses it instead of paying Grok again.
+  - Previews of an already-published slot return `skipped` with its `tweetId`.
   - Delayed QStash deliveries are skipped if they land more than 60 minutes after the window closes.
 
 ## How a post is built

@@ -14,12 +14,14 @@ import { formatMarketSnapshot, getMarketSnapshot } from "@/lib/daily-posts/marke
 import { verifyDailyPostRequest } from "@/lib/daily-posts/qstash";
 import { getDublinClock, getDublinDate, isWithinPostingGrace } from "@/lib/daily-posts/schedule";
 import {
+  attachDraftToClaim,
   claimDailyPost,
   getDailyPost,
   listRecentDailyPosts,
   markDailyPostFailed,
   markDailyPostPostedUnconfirmed,
   markDailyPostPublished,
+  saveDailyPostDraft,
 } from "@/lib/daily-posts/store";
 
 export const runtime = "nodejs";
@@ -139,6 +141,54 @@ function pickFormat(formats, recentSameType) {
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
+async function generateDraft({ type, brief, now, record }) {
+  const recent = await listRecentDailyPosts(12);
+  const format = pickFormat(brief.formats, recent.filter((item) => item.type === type));
+  const coinFocus = pickWeighted(COIN_FOCUS);
+  const market = await getMarketSnapshot();
+  record("market", market.errors.length ? "partial" : "ok", { errors: market.errors });
+
+  record("research", "started", { format: format.id, coinFocus: coinFocus.id });
+  const draft = await researchAndWritePost({
+    type,
+    brief,
+    format,
+    coinFocus,
+    clock: getDublinClock(now),
+    marketBlock: formatMarketSnapshot(market),
+    recent,
+    maxChars: DAILY_POST_MAX_CHARS,
+  });
+  record("research", "ok", { headline: draft.headline, citations: draft.citations.length });
+
+  const text = await finalizePostText(draft.text, brief, DAILY_POST_MAX_CHARS);
+  record("text", "ok", { length: text.length });
+
+  return {
+    generatedAt: new Date().toISOString(),
+    format: format.id,
+    coinFocus: coinFocus.id,
+    headline: draft.headline,
+    topics: draft.topics,
+    facts: draft.facts,
+    citations: draft.citations,
+    text,
+    scene: draft.scene,
+    altText: draft.altText || `Fart Girl, the emerald superhero, in today's ${brief.label.toLowerCase()} scene.`,
+    imagePrompt: buildDailyPostImagePrompt({ scene: draft.scene, imageMood: brief.imageMood }),
+    market,
+  };
+}
+
+async function downloadImage(url) {
+  const response = await fetch(url, { cache: "no-store" });
+  if (!response.ok) throw new Error(`Saved draft image download failed (${response.status})`);
+  return {
+    buffer: Buffer.from(await response.arrayBuffer()),
+    contentType: response.headers.get("content-type") || "image/jpeg",
+  };
+}
+
 function parseBody(text) {
   try {
     return text ? JSON.parse(text) : {};
@@ -175,6 +225,7 @@ async function handle(request) {
   const now = new Date();
   const preview = url.searchParams.get("preview") === "1";
   const previewImage = preview && url.searchParams.get("image") === "1";
+  const regenerate = url.searchParams.get("regenerate") === "1";
   const date = String(body.date || url.searchParams.get("date") || getDublinDate(now));
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
     return Response.json({ ok: false, traceId, error: "date must be YYYY-MM-DD" }, { status: 400 });
@@ -197,7 +248,14 @@ async function handle(request) {
   let result = null;
 
   try {
-    if (!preview) {
+    if (preview) {
+      const existing = await getDailyPost(postKey);
+      if (["published", "posted_unconfirmed"].includes(existing?.publishStatus)) {
+        record("draft", "skipped", { postKey, publishStatus: existing.publishStatus });
+        return Response.json({ ok: true, traceId, logs, skipped: true, postKey, publishStatus: existing.publishStatus, tweetId: existing.tweetId || null });
+      }
+      result = regenerate ? null : existing?.draft || null;
+    } else {
       record("x-account", "started");
       await assertExpectedXAccount();
       record("x-account", "ok");
@@ -209,68 +267,51 @@ async function handle(request) {
         return Response.json({ ok: true, traceId, logs, skipped: true, postKey, publishStatus: existing?.publishStatus || null });
       }
       record("claim", "ok", { postKey, attempt: post.publishAttempts });
+      result = regenerate ? null : post.draft || null;
     }
 
-    const recent = await listRecentDailyPosts(12);
-    const format = pickFormat(brief.formats, recent.filter((item) => item.type === type));
-    const coinFocus = pickWeighted(COIN_FOCUS);
-    const market = await getMarketSnapshot();
-    record("market", market.errors.length ? "partial" : "ok", { errors: market.errors });
-
-    record("research", "started", { format: format.id, coinFocus: coinFocus.id });
-    const draft = await researchAndWritePost({
-      type,
-      brief,
-      format,
-      coinFocus,
-      clock: getDublinClock(now),
-      marketBlock: formatMarketSnapshot(market),
-      recent,
-      maxChars: DAILY_POST_MAX_CHARS,
-    });
-    record("research", "ok", { headline: draft.headline, citations: draft.citations.length });
-
-    const text = await finalizePostText(draft.text, brief, DAILY_POST_MAX_CHARS);
-    const altText = draft.altText || `Fart Girl, the emerald superhero, in today's ${brief.label.toLowerCase()} scene.`;
-    const imagePrompt = buildDailyPostImagePrompt({ scene: draft.scene, imageMood: brief.imageMood });
-    record("text", "ok", { length: text.length });
-
-    result = {
-      type,
-      date,
-      format: format.id,
-      coinFocus: coinFocus.id,
-      headline: draft.headline,
-      topics: draft.topics,
-      facts: draft.facts,
-      citations: draft.citations,
-      text,
-      scene: draft.scene,
-      altText,
-      imagePrompt,
-    };
+    if (result) {
+      result = { ...result };
+      record("draft", "reused", { generatedAt: result.generatedAt, hasImage: Boolean(result.imageUrl) });
+    } else {
+      result = await generateDraft({ type, brief, now, record });
+    }
 
     if (preview && !previewImage) {
-      return Response.json({ ok: true, traceId, logs, preview: true, postKey, ...result, market });
+      await saveDailyPostDraft({ postKey, type, date, draft: result });
+      record("draft", "saved");
+      return Response.json({ ok: true, traceId, logs, preview: true, postKey, ...result });
     }
 
-    record("image-generation", "started");
-    const image = await generateComicImage(imagePrompt, DAILY_POST_REFERENCES, {
-      aspectRatio: process.env.DAILY_POST_IMAGE_ASPECT || "1:1",
-      model: process.env.DAILY_POST_IMAGE_MODEL || undefined,
-    });
-    record("image-generation", "ok", { bytes: image.buffer.length });
+    let image;
+    if (result.imageUrl) {
+      image = await downloadImage(result.imageUrl);
+      record("image", "reused", { url: result.imageUrl });
+    } else {
+      record("image-generation", "started");
+      image = await generateComicImage(result.imagePrompt, DAILY_POST_REFERENCES, {
+        aspectRatio: process.env.DAILY_POST_IMAGE_ASPECT || "1:1",
+        model: process.env.DAILY_POST_IMAGE_MODEL || undefined,
+      });
+      record("image-generation", "ok", { bytes: image.buffer.length });
 
-    const stored = await persistDailyPostImage(preview ? `previews/${traceId}` : postKey, image);
-    result.imageUrl = stored.url;
-    record("blob-upload", "ok", { url: stored.url });
+      // Unique name per generation so a regenerated image is never served from CDN cache.
+      const stored = await persistDailyPostImage(`drafts/${postKey}-${traceId}`, image);
+      result.imageUrl = stored.url;
+      record("blob-upload", "ok", { url: stored.url });
+    }
 
     if (preview) {
-      return Response.json({ ok: true, traceId, logs, preview: true, postKey, ...result, market });
+      await saveDailyPostDraft({ postKey, type, date, draft: result });
+      record("draft", "saved");
+      return Response.json({ ok: true, traceId, logs, preview: true, postKey, ...result });
     }
 
+    // Lets a QStash retry reuse this content instead of paying Grok again.
+    await attachDraftToClaim(post, result);
+
     record("x-publish", "started");
-    const tweet = await postComicToX(text, image.buffer, image.contentType, altText);
+    const tweet = await postComicToX(result.text, image.buffer, image.contentType, result.altText);
     posted = true;
     result.tweetId = tweet?.data?.id || null;
     record("x-publish", "ok", { tweetId: result.tweetId });
@@ -278,7 +319,7 @@ async function handle(request) {
     await markDailyPostPublished(post, result);
     record("database-mark-published", "ok");
 
-    return Response.json({ ok: true, traceId, logs, postKey, tweetId: result.tweetId, text, imageUrl: result.imageUrl });
+    return Response.json({ ok: true, traceId, logs, postKey, tweetId: result.tweetId, text: result.text, imageUrl: result.imageUrl });
   } catch (error) {
     const message = error?.message || String(error);
     record("pipeline", "failed", { postKey, postedToX: posted, error: message });

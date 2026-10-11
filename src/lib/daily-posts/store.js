@@ -34,8 +34,9 @@ export async function reserveDailyPostSchedule({ postKey, type, date, scheduledF
     if (!isDuplicateKey(error)) throw error;
   }
 
+  // Also adopts records created by a preview draft (no scheduleStatus yet).
   const retry = await posts.updateOne(
-    { postKey, scheduleStatus: "schedule_failed", publishStatus: { $ne: "published" } },
+    { postKey, scheduleStatus: { $in: ["schedule_failed", null] }, publishStatus: { $nin: ["published", "posted_unconfirmed"] } },
     { $set: { scheduleStatus: "scheduling", scheduledFor, updatedAt: now } },
   );
   return retry.modifiedCount === 1;
@@ -68,7 +69,33 @@ export async function markDailyPostScheduleFailed(postKey, error) {
 
 export async function getDailyPost(postKey) {
   const posts = await collection();
-  return posts.findOne({ postKey }, { projection: { _id: 0, postKey: 1, publishStatus: 1, tweetId: 1 } });
+  return posts.findOne({ postKey }, { projection: { _id: 0 } });
+}
+
+export async function saveDailyPostDraft({ postKey, type, date, draft }) {
+  const posts = await collection();
+  const now = new Date();
+  try {
+    await posts.updateOne(
+      { postKey, publishStatus: { $nin: ["published", "posted_unconfirmed", "processing"] } },
+      {
+        $set: { draft, draftUpdatedAt: now, updatedAt: now },
+        $setOnInsert: { postKey, type, date, publishStatus: "pending", publishAttempts: 0, createdAt: now },
+      },
+      { upsert: true },
+    );
+  } catch (error) {
+    // Record is published or mid-publish; leave it untouched.
+    if (!isDuplicateKey(error)) throw error;
+  }
+}
+
+export async function attachDraftToClaim(post, draft) {
+  const posts = await collection();
+  await posts.updateOne(
+    { _id: post._id, claimId: post.claimId },
+    { $set: { draft, draftUpdatedAt: new Date(), updatedAt: new Date() } },
+  );
 }
 
 export async function claimDailyPost({ postKey, type, date, claimId }) {
