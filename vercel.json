@@ -3,6 +3,10 @@
     {
       "path": "/api/comic/cron",
       "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/daily-post/schedule",
+      "schedule": "0 5 * * *"
     }
   ]
 }

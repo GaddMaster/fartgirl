@@ -145,7 +145,7 @@ export async function generateDailyRecap(pages) {
   return `${prefix}${summary}`.slice(0, X_MAX_CHARS);
 }
 
-export async function generateComicImage(prompt, references) {
+export async function generateComicImage(prompt, references, options = {}) {
   if (!process.env.XAI_API_KEY) {
     throw new Error("Missing XAI_API_KEY");
   }
@@ -164,11 +164,11 @@ export async function generateComicImage(prompt, references) {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: process.env.COMIC_IMAGE_MODEL || "grok-imagine-image-2.0",
+      model: options.model || process.env.COMIC_IMAGE_MODEL || "grok-imagine-image-2.0",
       prompt: promptWithReferences,
       images: references.map(({ url }) => ({ url })),
       n: 1,
-      aspect_ratio: "1:1",
+      aspect_ratio: options.aspectRatio || "1:1",
       response_format: "url",
     }),
   });
