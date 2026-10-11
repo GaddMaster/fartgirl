@@ -13,7 +13,7 @@ Trigger times are random within each window and stay at least 10 minutes away fr
 ## Routes
 
 - `GET /api/daily-post/schedule`: Vercel cron at 05:00 UTC (05:00/06:00 Dublin). Creates one QStash message per type for today using `notBefore`. Deduplicated in Mongo (`daily_posts.postKey`) and with the QStash `deduplicationId`. `?dryRun=1` shows the picked times without scheduling. `?types=gm,gn` limits the run to those types.
-- `GET|POST /api/daily-post?type=gm|gd|gn`: QStash target. Claims `{date}-{type}`, gets a live market snapshot, has Grok research (`web_search` + `x_search`) and write the post plus an image scene, validates the text for account safety, generates the image from the two reference sheets, uploads it to Blob, posts it to X, and marks it published.
+- `POST /api/daily-post?type=gm|gd|gn`: QStash target. Claims `{date}-{type}`, gets a live market snapshot, has Grok research (`web_search` + `x_search`) and write the post plus an image scene, validates the text for account safety, generates the image from the two reference sheets, uploads it to Blob, posts it to X, and marks it published.
   - `?preview=1` researches and writes the post without claiming or posting. Add `&image=1` to also generate the image (saved under `daily-posts/previews/`).
   - Delayed QStash deliveries are skipped if they land more than 60 minutes after the window closes.
 

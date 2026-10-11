@@ -294,10 +294,6 @@ async function handle(request) {
   }
 }
 
-export async function GET(request) {
-  return handle(request);
-}
-
 export async function POST(request) {
   return handle(request);
 }
