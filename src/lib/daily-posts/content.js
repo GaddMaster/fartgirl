@@ -109,7 +109,7 @@ function buildUserPrompt({ type, brief, format, coinFocus, clock, marketBlock, r
     "RECENT POSTS (do not repeat their stories, hooks, scenes or jokes):",
     formatRecentPosts(recent),
     "",
-    `LENGTH: the "text" field must be at most ${maxChars} characters (emojis count as 2). Aim for ${Math.round(maxChars * 0.85)}-${maxChars}. Spend the characters on the story and the insight, not on filler.`,
+    `LENGTH: the "text" field must be at most ${maxChars} characters (emojis count as 2). Aim for ${maxChars - 50}-${maxChars - 20} to leave a safety margin. Spend the characters on the story and the insight, not on filler.`,
     "Research first, then write. Return the JSON only.",
   ].join("\n");
 }
@@ -239,6 +239,8 @@ export function validatePostText(text, brief, maxChars) {
 }
 
 async function rewritePost({ text, issues, brief, maxChars }) {
+  // Models undercount characters, so aim below the hard limit.
+  const targetChars = Math.max(120, maxChars - 30);
   const response = await fetch(`${XAI_BASE_URL}/chat/completions`, {
     method: "POST",
     headers: {
@@ -251,9 +253,9 @@ async function rewritePost({ text, issues, brief, maxChars }) {
       messages: [
         {
           role: "system",
-          content: `You fix X posts for the Fart Girl account. Keep every fact, number and the voice exactly; only fix the listed issues. The post must open with the greeting "${brief.greeting}", be at most ${maxChars} characters (emojis count as 2), have no links, no @mentions, no contract addresses, at most 2 hashtags. Return JSON only: {"text": "..."}`,
+          content: `You fix X posts for the Fart Girl account. Keep the news story, its key fact/number and the voice; only fix the listed issues. The post must open with the greeting "${brief.greeting}", be at most ${targetChars} characters (emojis count as 2; shorten by cutting filler lines, never the story), have no links, no @mentions, no contract addresses, at most 2 hashtags. Return JSON only: {"text": "..."}`,
         },
-        { role: "user", content: `ISSUES:\n- ${issues.join("\n- ")}\n\nPOST:\n${text}` },
+        { role: "user", content: `ISSUES:\n- ${issues.join("\n- ")}\n\nCURRENT LENGTH: ${xWeightedLength(text)} weighted chars. TARGET: ${targetChars} or fewer.\n\nPOST:\n${text}` },
       ],
     }),
     signal: AbortSignal.timeout(45_000),
@@ -272,16 +274,17 @@ function trimToLength(text, maxChars) {
   const joined = lines.join("\n").trim();
   if (xWeightedLength(joined) <= maxChars) return joined;
 
+  const ellipsis = "…";
   const chars = Array.from(joined);
-  while (chars.length && xWeightedLength(chars.join("")) > maxChars - 1) chars.pop();
-  return `${chars.join("").trimEnd()}…`;
+  while (chars.length && xWeightedLength(chars.join("").trimEnd()) + xWeightedLength(ellipsis) > maxChars) chars.pop();
+  return `${chars.join("").trimEnd()}${ellipsis}`;
 }
 
 export async function finalizePostText(draft, brief, maxChars = DAILY_POST_MAX_CHARS) {
   let text = draft.replace(/\r\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
   let issues = validatePostText(text, brief, maxChars);
 
-  if (issues.length) {
+  for (let attempt = 0; attempt < 2 && issues.length; attempt++) {
     text = await rewritePost({ text, issues, brief, maxChars });
     issues = validatePostText(text, brief, maxChars);
   }
