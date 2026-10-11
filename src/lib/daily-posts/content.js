@@ -51,7 +51,9 @@ NEWS FIRST (most important writing rule)
 VOICE
 - Funny, cute, comical, smart, gritty, cheeky, bold — pick the mix that fits today's story. Confident, warm, never cringe, never corporate.
 - Write as the account. Fart Girl may appear in third person as the hero of the moment ("Fart Girl clocked in before the Asia close…") or with one short quoted line. Don't overdo the roleplay; the information is the star.
-- First line is the hook and must include the required greeting. Short lines, generous line breaks. 0-3 emojis.
+- First segment is the hook and must include the required greeting.
+- LAYOUT: split the post into 3-5 short segments (one sentence or idea each) with ONE EMPTY LINE between every segment. Never one block of text.
+- EMOJIS: use 3-6 fitting, sensible emojis that add meaning (☀️☕ morning, 📊📉📈 markets, 💥 crashes, 🧠 lessons, ⚡💚 Fart Girl energy, 🌙✨ night). Put them at the start or end of segments, never several in a row, never in the middle of a number.
 - One green-gas/emerald-glow pun maximum. Never toilet humour, never crude body jokes.
 - Never mention AI, prompts, models, or that this was generated.
 
@@ -238,6 +240,18 @@ export function validatePostText(text, brief, maxChars) {
   return issues;
 }
 
+function styleIssues(text) {
+  const issues = [];
+  const segments = text.split(/\n\s*\n/).filter((segment) => segment.trim());
+  if (segments.length < 3) {
+    issues.push("Split the post into 3-5 short segments with one empty line between every segment.");
+  }
+  if ((text.match(/\p{Extended_Pictographic}/gu) || []).length < 3) {
+    issues.push("Use 3-6 fitting emojis at the start or end of segments.");
+  }
+  return issues;
+}
+
 async function rewritePost({ text, issues, brief, maxChars }) {
   // Models undercount characters, so aim below the hard limit.
   const targetChars = Math.max(120, maxChars - 30);
@@ -253,7 +267,7 @@ async function rewritePost({ text, issues, brief, maxChars }) {
       messages: [
         {
           role: "system",
-          content: `You fix X posts for the Fart Girl account. Keep the news story, its key fact/number and the voice; only fix the listed issues. The post must open with the greeting "${brief.greeting}", be at most ${targetChars} characters (emojis count as 2; shorten by cutting filler lines, never the story), have no links, no @mentions, no contract addresses, at most 2 hashtags. Return JSON only: {"text": "..."}`,
+          content: `You fix X posts for the Fart Girl account. Keep the news story, its key fact/number and the voice; only fix the listed issues. The post must open with the greeting "${brief.greeting}", be at most ${targetChars} characters (emojis count as 2; shorten by cutting filler lines, never the story), have no links, no @mentions, no contract addresses, at most 2 hashtags. Layout: 3-5 short segments separated by one empty line each, with 3-6 fitting emojis at the start or end of segments. Return JSON only: {"text": "..."}`,
         },
         { role: "user", content: `ISSUES:\n- ${issues.join("\n- ")}\n\nCURRENT LENGTH: ${xWeightedLength(text)} weighted chars. TARGET: ${targetChars} or fewer.\n\nPOST:\n${text}` },
       ],
@@ -287,6 +301,13 @@ export async function finalizePostText(draft, brief, maxChars = DAILY_POST_MAX_C
   for (let attempt = 0; attempt < 2 && issues.length; attempt++) {
     text = await rewritePost({ text, issues, brief, maxChars });
     issues = validatePostText(text, brief, maxChars);
+  }
+
+  // Layout/emoji problems are worth one restyle, but never block a safe post.
+  const style = styleIssues(text);
+  if (!issues.length && style.length) {
+    const styled = await rewritePost({ text, issues: style, brief, maxChars }).catch(() => null);
+    if (styled && !validatePostText(styled, brief, maxChars).length) text = styled;
   }
 
   if (issues.length) {
