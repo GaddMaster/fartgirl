@@ -316,13 +316,14 @@ export function buildDailyPostImagePrompt({ scene, imageMood }) {
       "- Lena Cole / Fart Girl, adult woman in her early twenties. Warm olive skin, oval face, straight dark brows, brown eyes, small straight nose, faint nick scar through the LEFT eyebrow, dark brown almost-black hair in a MESSY LOW BUN with a few loose strands.",
       "- Athletic, real proportions, heroic and confident. Not pin-up, not a child.",
       "- Simple dark-green eye MASK covering ONLY the eyes. Matte emerald bodysuit #0B6B3A with forest-green panels #0E3D24 on ribs, forearms and shins, thin luminous mint seam-lines #3DFF88 like glowing veins, fingerless gloves, low practical boots. NO cape, NO heels, NO cleavage window.",
-      "- NEW IN THIS TIMELINE: a chest emblem reading exactly \"FART GIRL\" in bold rounded comic lettering, mint #3DFF88 with a thick black outline, centred across the upper chest, clearly legible and correctly spelled.",
+      "- NEW IN THIS TIMELINE: the words \"FART GIRL\" are BUILT INTO the suit across the upper chest, never a flat sticker or printed text on top. The emblem is a moulded, slightly raised forest-green chest plate that is part of the suit's panelling; the letters are formed by the same luminous mint #3DFF88 seam-lines that run through the rest of the suit, in bold rounded comic lettering. It wraps around the curve of her chest and ribs, follows the fabric folds, catches the same light and shadow as the suit, and the seams flow into it seamlessly. Clearly legible and spelled exactly F-A-R-T G-I-R-L.",
+      "- Hero state: no earrings.",
     ].join("\n"),
     "POWERS: luminous emerald-mint energy mist, shock-rings and electric vapour #3DFF88 swirling from her hands, aura or flight trail. Glowing, magical, chlorophyll-lightning feel. NEVER brown, never from her rear, nothing bodily.",
     `LIGHTING & MOOD: ${imageMood}`,
     `SCENE: ${scene}`,
     "TEXT IN IMAGE: only the FART GIRL chest emblem plus at most one short in-scene text of 4 words or fewer if the scene asks for it. No watermark, no title, no signature, no real brand logos.",
-    "NEGATIVE: comic page layout, panels, gutters, speech bubbles, chibi, child, anime waifu, pin-up, sexy pose, cape, high heels, cleavage cutout, brown cloud, toilet humour, misspelled emblem, extra unnamed superheroes, real celebrity likeness, different hair colour, blonde, red hair, changed face, photoreal, 3D render, watermark.",
+    "NEGATIVE: comic page layout, panels, gutters, speech bubbles, chibi, child, anime waifu, pin-up, sexy pose, cape, high heels, cleavage cutout, brown cloud, toilet humour, misspelled emblem, flat text overlay on the chest, sticker-like logo, floating or pasted-on lettering, earrings, extra unnamed superheroes, real celebrity likeness, different hair colour, blonde, red hair, changed face, photoreal, 3D render, watermark.",
   ].join("\n\n");
 }
 

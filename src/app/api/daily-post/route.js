@@ -226,6 +226,7 @@ async function handle(request) {
   const preview = url.searchParams.get("preview") === "1";
   const previewImage = preview && url.searchParams.get("image") === "1";
   const regenerate = url.searchParams.get("regenerate") === "1";
+  const regenerateImage = url.searchParams.get("regenerateImage") === "1";
   const date = String(body.date || url.searchParams.get("date") || getDublinDate(now));
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
     return Response.json({ ok: false, traceId, error: "date must be YYYY-MM-DD" }, { status: 400 });
@@ -273,6 +274,12 @@ async function handle(request) {
     if (result) {
       result = { ...result };
       record("draft", "reused", { generatedAt: result.generatedAt, hasImage: Boolean(result.imageUrl) });
+      if (regenerateImage) {
+        // Rebuild from the saved scene so image-prompt changes apply.
+        result.imagePrompt = buildDailyPostImagePrompt({ scene: result.scene, imageMood: brief.imageMood });
+        delete result.imageUrl;
+        record("image", "regenerate-requested");
+      }
     } else {
       result = await generateDraft({ type, brief, now, record });
     }

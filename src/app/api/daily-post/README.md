@@ -17,6 +17,7 @@ Trigger times are random within each window and stay at least 10 minutes away fr
   - `?preview=1` researches and writes the post without claiming or posting. Add `&image=1` to also generate the image (saved under `daily-posts/drafts/`).
   - Drafts: a preview saves its text and image on the day's record (`daily_posts.draft`). Every later call for the same `{date}-{type}` reuses that draft instead of calling Grok again, including the live run and the scheduled QStash run. That gives you preview → check → publish exactly what you saw. A text-only draft gets its image generated on first use.
   - `&regenerate=1` ignores the saved draft and generates fresh content. Works with or without `preview=1`.
+  - `&regenerateImage=1` keeps the saved text and makes only a new image, rebuilding the image prompt from the saved scene so prompt changes apply.
   - A live run also stores what it generated, so a QStash retry reuses it instead of paying Grok again.
   - Previews of an already-published slot return `skipped` with its `tweetId`.
   - Delayed QStash deliveries are skipped if they land more than 60 minutes after the window closes.
