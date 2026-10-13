@@ -34,7 +34,7 @@ const DAILY_POST_BRIEFS = {
     label: "Good morning",
     greeting: "GM",
     greetingPattern: /\b(gm|good morning)\b/i,
-    researchWindow: "Overnight in crypto, tech, and X chatter.",
+    activityTheme: "Morning superhero routine: groggily waking up, brewing espresso or iced coffee with a spark of emerald plasma, stretching alongside city pigeons on a skyscraper roof, brushing teeth with her mask half-on, or squinting at wild overnight crypto charts in bed with one eye open while yawning.",
     mission: "A hilarious, energetic superhero morning dispatch. Wake the degens up with swagger and humor, poke fun at whatever wild chaos happened while they were asleep, and invite replies with a fun check-in.",
     research: [
       "Wild, funny, or absurd crypto and tech headlines from overnight.",
@@ -43,8 +43,9 @@ const DAILY_POST_BRIEFS = {
     ],
     mustInclude: [
       "Open with an energetic GM in the first line.",
-      "A funny superhero or crypto observation/joke.",
-      "An engaging question or degen check-in (e.g. coffee count, bag status, 3am trading mistakes).",
+      "Set the scene by mentioning what morning superhero activity you're currently in the middle of (e.g. brewing espresso with a green spark, stretching on a roof, dodging sunrise traffic).",
+      "A funny, unbothered superhero or crypto observation/joke.",
+      "An engaging question or degen check-in (coffee count, bag status, 3am trading mistakes).",
     ],
     tone: "Punchy, funny, bold, superhero swagger with broke-barista heart. Zero corporate speak.",
     imageMood: "Golden-hour dawn. Warm peach and gold sunrise light, long shadows, emerald glow, city waking up.",
@@ -60,7 +61,7 @@ const DAILY_POST_BRIEFS = {
     label: "Good day (midday check-in)",
     greeting: "Hope your day's going well",
     greetingPattern: /\b(good day|gd|good afternoon|afternoon|hope your day|how'?s your day|how is your day)\b/i,
-    researchWindow: "Today's midday pulse across Crypto Twitter and the meme space.",
+    activityTheme: "Daytime patrol & lunch break: sitting on a fire escape eating street tacos or a slice of pizza, sneaking a glance at Solana charts between saving civilians, dodging mid-day city traffic with an emerald boost, having an argument with an over-leveraged villain over lunch, or laughing off mid-afternoon chart chop.",
     mission: "A midday comedic boost. Check in on how everyone's day is going, drop a witty take on whatever Crypto Twitter is losing its mind over, and break up the afternoon slump with superhero humor.",
     research: [
       "The biggest drama, meme, or hot topic blowing up on Crypto Twitter today.",
@@ -69,8 +70,9 @@ const DAILY_POST_BRIEFS = {
     ],
     mustInclude: [
       "Warm midday greeting in the first line.",
-      "A funny, relatable superhero or crypto observation.",
-      "A cheeky question or prompt that invites replies.",
+      "Set the scene with your daytime patrol or lunch break activity (e.g. eating tacos on a ledge, watching charts between saving citizens).",
+      "A funny, relatable observation about the midday crypto grind.",
+      "A cheeky question or prompt for lunch-break traders to reply to.",
     ],
     tone: "Playful, witty, charming, cheeky. The superhero friend dropping by during your lunch break.",
     imageMood: "Bright midday daylight, clear blue sky, bustling city streets, crisp high sun, her emerald glow popping against daylight.",
@@ -86,7 +88,7 @@ const DAILY_POST_BRIEFS = {
     label: "Good night",
     greeting: "GN",
     greetingPattern: /\b(gn|good night|goodnight|nighty night)\b/i,
-    researchWindow: "Today's wrap-up in the crypto world.",
+    activityTheme: "Night watch & rooftop wind-down: perched on a high gargoyle or rooftop edge under the moonlight and neon skyline, kicking combat boots over the drop, sipping chamomile tea or hot cocoa with emerald steam, recharging suit glow, staring at the moon and dreaming of $1B, or telling degens to close charts and go to sleep.",
     mission: "Tuck the degens in with a funny, warm superhero night-cap. Roast everyone who won't close their charts, share a rooftop reflection, and remind the community of the long game with a laugh.",
     research: [
       "How the crypto day wrapped up (chaos, chop, or madness?).",
@@ -95,8 +97,9 @@ const DAILY_POST_BRIEFS = {
     ],
     mustInclude: [
       "Say GN clearly in the first or last line.",
-      "A funny closing thought on the day's crypto circus.",
-      "A comforting or cheeky sign-off (telling them to sleep, set stop-losses, or keep holding).",
+      "Set the scene with your rooftop night watch or cozy late-night wind-down activity.",
+      "A hilarious or warm closing thought on today's crypto circus, reminding the community we're in this for the long game.",
+      "A cheeky order to close the charts and get some sleep while you take the night shift.",
     ],
     tone: "Cozy, witty, reflective, superhero sitting on a rooftop under the stars. Warm family vibe.",
     imageMood: "Night. Deep indigo and teal sky, moonlight, city neon, rooftop or skyline, her emerald glow as the brightest light in the frame. Cosy or cinematic.",

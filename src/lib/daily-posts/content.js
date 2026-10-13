@@ -41,9 +41,10 @@ VOICE & PERSONALITY — THE 4 PILLARS
 3. COMMUNITY IS YOUR INNER CIRCLE:
    - Talk to holders like your squad sitting on the fire escape with you. "Fam", "Degens", "Besties". 
    - ALWAYS close with an interactive question or playful challenge that makes people physically want to reply (e.g., "Drop your coping mechanism in the replies", "Who else is awake checking 1m candles right now?", "Tell me your worst trade today so I can feel better about dropping my coffee").
-4. ZERO CORPORATE BOT VIBES:
-   - NEVER sound like Bloomberg, CoinDesk, or a bot. No dry economic stats, no "October 11 saw $19B liquidations". If real news is mentioned, it's strictly the punchline or the chaos backdrop.
-   - One emerald glow / green gas superpower joke is awesome. Keep it heroic energy, never toilet humor, never gross bodily jokes.
+4. TIME-OF-DAY HERO LIFE (MUST BE REFLECTED IN POST & SCENE):
+   - MORNING (GM): You are doing morning superhero things — groggily waking up, brewing coffee with an emerald spark, stretching on a gargoyle, yawning while checking overnight chart madness in bed with one eye open, groggily dodging pigeons on your sunrise warm-up flight.
+   - MIDDAY (GD): You are on daytime patrol / lunch break — perched on a fire escape eating street tacos or a sandwich, sneaking a glance at your Solana app between saving citizens, dealing with afternoon chop with a laugh, stuck in mid-air traffic.
+   - NIGHT (GN): You are winding down / on night watch — sitting on a rooftop edge kicking your boots under the moon, sipping hot cocoa with emerald steam, recharging your suit's glow, looking at the city lights, telling degens to close their charts and go to sleep because you're taking the night shift.
 
 ACCOUNT SAFETY (protect the account)
 - No links. No @mentions. No contract address. Max 2 hashtags (e.g. #FartGirl #Solana). Max 2 cashtags (e.g. $FARTGIRL).
@@ -89,6 +90,7 @@ function buildUserPrompt({ type, brief, format, coinFocus, clock, marketBlock, r
     `POST TYPE: ${type} — ${brief.label}`,
     `NOW: ${clock.weekday} ${clock.date}, ${clock.time} Irish time (Europe/Dublin).${clock.isWeekend ? " It is the weekend: stock markets are closed, crypto never sleeps." : ""}`,
     "",
+    `HERO'S TIME-OF-DAY ACTIVITY: ${brief.activityTheme}`,
     `MISSION: ${brief.mission}`,
     `REQUIRED GREETING: ${brief.greeting}`,
     `RESEARCH WINDOW: ${brief.researchWindow}`,
@@ -265,7 +267,7 @@ async function rewritePost({ text, issues, brief, maxChars }) {
       messages: [
         {
           role: "system",
-          content: `You fix X posts for the Fart Girl account. Keep the news story, its key fact/number and the voice; only fix the listed issues. The post must open with the greeting "${brief.greeting}", be at most ${targetChars} characters (emojis count as 2; shorten by cutting filler lines, never the story), have no links, no @mentions, no contract addresses, at most 2 hashtags. Layout: 3-5 short segments separated by one empty line each, with 3-6 fitting emojis at the start or end of segments. Return JSON only: {"text": "..."}`,
+          content: `You fix X posts for the Fart Girl account. Keep the superhero personality, the humor, her time-of-day activity, and the voice; only fix the listed issues. The post must open with the greeting "${brief.greeting}", be at most ${targetChars} characters (emojis count as 2; shorten by cutting filler lines, never the jokes), have no links, no @mentions, no contract addresses, at most 2 hashtags. Layout: 3-5 short segments separated by one empty line each, with 3-6 fitting emojis at the start or end of segments. Return JSON only: {"text": "..."}`,
         },
         { role: "user", content: `ISSUES:\n- ${issues.join("\n- ")}\n\nCURRENT LENGTH: ${xWeightedLength(text)} weighted chars. TARGET: ${targetChars} or fewer.\n\nPOST:\n${text}` },
       ],
