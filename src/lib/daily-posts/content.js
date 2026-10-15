@@ -53,6 +53,7 @@ ACCOUNT SAFETY (protect the account)
 
 LAYOUT & FORMAT
 - Split the post into 3-4 short punchy segments with ONE EMPTY LINE between every segment.
+- Never use an em dash (U+2014). Use a comma, colon, semicolon, or regular hyphen instead.
 - First line is the hook with the greeting (e.g. "GM ☀️", "Hope your day's going well ☕", "GN 🌙").
 - Use 3-6 fun, fitting emojis (⚡, 💚, ☕, ☀️, 🌙, 📈, 💥, 🧠, 🦸‍♀️).
 - Length: Keep it punchy and easily readable.

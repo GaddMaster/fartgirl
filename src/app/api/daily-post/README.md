@@ -24,6 +24,8 @@ Trigger times are random within each window and stay at least 10 minutes away fr
 
 ## How a post is built
 
+The shared Grok system prompt for all three daily posts (`gm`, `gd`, and `gn`) forbids em dashes (U+2014) and requests standard punctuation instead.
+
 1. The `DAILY_POST_BRIEFS` object in `route.js` defines the mission, research focus, required parts, tone, image mood, and a set of rotating formats for each type. The last 3 formats used for that type are not picked again.
 2. `COIN_FOCUS` decides how much the post leans on the coin: `light`, `stat`, or `lore`.
 3. `lib/daily-posts/market.js` fetches live numbers from DexScreener ($FARTGIRL, $FARTBOY), CoinGecko (BTC/ETH/SOL, total market cap, dominance), and alternative.me (Fear & Greed). Grok may only use these numbers or ones from sources it opened.
