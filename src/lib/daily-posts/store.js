@@ -184,7 +184,7 @@ export async function listRecentDailyPosts(limit = 12) {
   return posts.find(
     { publishStatus: { $in: ["published", "posted_unconfirmed"] } },
     {
-      projection: { _id: 0, type: 1, date: 1, format: 1, headline: 1, topics: 1, scene: 1, text: 1 },
+      projection: { _id: 0, type: 1, date: 1, format: 1, headline: 1, topics: 1, scene: 1, text: 1, visualDirection: 1, "draft.visualDirection": 1 },
       sort: { publishedAt: -1, postedAt: -1 },
       limit,
     },

@@ -4,14 +4,16 @@ import { generateComicImage } from "@/lib/comic/content";
 import { assertExpectedXAccount, postComicToX } from "@/lib/comic/twitter";
 import {
   DAILY_POST_MAX_CHARS,
-  DAILY_POST_REFERENCES,
   buildDailyPostImagePrompt,
   finalizePostText,
+  normalizePostText,
   persistDailyPostImage,
   researchAndWritePost,
 } from "@/lib/daily-posts/content";
 import { formatMarketSnapshot, getMarketSnapshot } from "@/lib/daily-posts/market";
 import { verifyDailyPostRequest } from "@/lib/daily-posts/qstash";
+import { DAILY_POST_CHARACTER, DAILY_POST_COSTUMES, selectDailyPostReferences } from "@/lib/daily-posts/references";
+import { selectDailyPostScene } from "@/lib/daily-posts/scenes";
 import { getDublinClock, getDublinDate, isWithinPostingGrace } from "@/lib/daily-posts/schedule";
 import {
   attachDraftToClaim,
@@ -28,13 +30,89 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
+const DAILY_POST_COMPOSITIONS = [
+  "Wide environmental frame from knee height; action on the left third and location filling the background.",
+  "High three-quarter view with diagonal movement; her hands and actual task clearly visible.",
+  "Medium side-on frame with layered depth and no camera-facing stance; do not invent a doorway.",
+  "Wide lateral profile with strong negative space and a clear full-body silhouette in mid-action.",
+  "Low three-quarter medium shot with one large foreground object and her task beyond it.",
+  "Eye-level candid medium frame; asymmetrical posture and gaze directed at the object she is handling.",
+  "Wide frame with foreground elements already present in the assignment, off-center hero and deep environmental context.",
+  "Overhead three-quarter frame emphasizing the action's geometry and her active hands, face still visible; no invented tools.",
+  "Tight three-quarter upper-body view; expressive face, working hands, and the setting reflected behind her.",
+  "Long diagonal composition from the far end of the space with a foreground leading line toward her activity.",
+  "Medium three-quarter frame from behind one shoulder, face in profile and the scene's focal action beyond her.",
+  "Ground-level wide view with overlapping planes and a dynamic bent-knee or seated silhouette appropriate to the activity.",
+];
+
+const DAILY_POST_EXPRESSIONS = [
+  "An amused crooked grin, eyes following the task rather than looking at the viewer.",
+  "Focused concentration with one eyebrow raised and a slightly pursed mouth.",
+  "An open spontaneous laugh and relaxed shoulders caught mid-movement.",
+  "A playfully exasperated sideways glance with expressive, asymmetrical hands.",
+  "Quiet contentment with a small closed-mouth smile and unposed body language.",
+  "Wide-eyed surprise at a harmless complication, caught just before she recovers.",
+  "A proud little smirk as a difficult task finally works, weight shifted naturally.",
+  "Sleepy determination with a tiny yawn suppressed behind a gloved hand when the task permits.",
+  "A warm attentive smile directed toward someone she is helping just outside the frame.",
+  "A skeptical raised brow and a comically careful posture toward an uncooperative prop.",
+];
+
+const DAILY_POST_FOCUSED_EXPRESSIONS = [
+  "Steady focused eyes and a set jaw, gaze fixed on the rescue rather than the camera.",
+  "Alert concentration, slightly furrowed brow, composed rather than frightened.",
+  "Calm reassuring expression directed toward the person she is protecting.",
+  "Quiet determination, lips pressed together and eyes tracking the danger.",
+  "Controlled confidence and a level gaze, fully attentive to the people around her.",
+  "Resolute expression with raised alert brows, shoulders engaged in the assigned action.",
+];
+
+const DAILY_POST_LIGHTING = {
+  gm: ["Soft early morning light, naturally adapted to the assigned interior or exterior.", "Clear morning side-light and gentle shadows appropriate to this setting.", "Low golden morning light on the scene's existing surfaces.", "Fresh cool morning tones with warm reflected light.", "Diffuse morning illumination with clear readable faces.", "Bright early daylight and long shadows only where the location permits."],
+  gd: ["Clear afternoon daylight, adapted to this interior or exterior.", "Cloud-filtered afternoon light with soft depth.", "Bright daytime illumination with natural reflected colors.", "Warm afternoon side-light across existing surfaces.", "Soft shaded daylight with a brighter background where appropriate.", "Neutral daytime light and clear faces without invented weather or windows."],
+  gn: ["Warm location-appropriate practical lights against cool night shadows.", "Soft night illumination with subtle silver edges where outdoors.", "Amber city or interior lighting with quiet blue shadows.", "Existing street or room lights shaping the action without invented fires or lanterns.", "Gentle nighttime contrast, using only light sources that belong in this setting.", "Soft pools of city or room light with dark nocturnal surroundings."],
+};
+
+function pickFreshValue(values, previous) {
+  const excluded = new Set(previous.filter(Boolean).slice(0, values.length - 1));
+  const available = values.filter((value) => !excluded.has(value));
+  return available[Math.floor(Math.random() * available.length)];
+}
+
+function pickVisualDirection(type, recent, previousDirection, clock = getDublinClock()) {
+  const directions = [previousDirection, ...recent.map((post) => post.visualDirection || post.draft?.visualDirection)].filter(Boolean);
+  const sameType = directions.filter((direction) => direction.type === type);
+  const selected = selectDailyPostScene(type, clock.weekday, directions);
+  const costumeId = pickFreshValue(DAILY_POST_COSTUMES.map((costume) => costume.id), directions.map((direction) => direction.costumeId));
+  const costume = DAILY_POST_COSTUMES.find((item) => item.id === costumeId);
+  const referenceId = pickFreshValue(costume.references.map((reference) => reference.id), directions.map((direction) => direction.referenceId));
+  const expressions = ["rescue", "crime"].includes(selected.category) ? DAILY_POST_FOCUSED_EXPRESSIONS : DAILY_POST_EXPRESSIONS;
+  return {
+    type,
+    characterId: DAILY_POST_CHARACTER.id,
+    sceneId: selected.id,
+    category: selected.category,
+    weekday: clock.weekday,
+    permittedDays: selected.days,
+    activity: selected.activity,
+    logistics: selected.logistics,
+    wardrobe: selected.wardrobe,
+    clothes: selected.clothes || costume.garment,
+    costumeId,
+    referenceId,
+    composition: pickFreshValue(DAILY_POST_COMPOSITIONS, directions.map((direction) => direction.composition)),
+    expression: pickFreshValue(expressions, directions.map((direction) => direction.expression)),
+    lighting: selected.lighting || pickFreshValue(DAILY_POST_LIGHTING[type], sameType.map((direction) => direction.lighting)),
+  };
+}
+
 // Editorial brief per slot; this is what Grok is given to write each post in Fart Girl's voice.
 const DAILY_POST_BRIEFS = {
   gm: {
     label: "Good morning",
     greeting: "GM",
     greetingPattern: /\b(gm|good morning)\b/i,
-    activityTheme: "Morning superhero routine: groggily waking up, brewing espresso or iced coffee with a spark of emerald plasma, stretching alongside city pigeons on a skyscraper roof, brushing teeth with her mask half-on, or squinting at wild overnight crypto charts in bed with one eye open while yawning.",
+    activityTheme: "Use the assigned morning activity and location; superhero routines can happen anywhere, indoors or outdoors.",
     mission: "A hilarious, energetic superhero morning dispatch. Wake the degens up with swagger and humor, poke fun at whatever wild chaos happened while they were asleep, and invite replies with a fun check-in.",
     research: [
       "Wild, funny, or absurd crypto and tech headlines from overnight.",
@@ -43,12 +121,12 @@ const DAILY_POST_BRIEFS = {
     ],
     mustInclude: [
       "Open with an energetic GM in the first line.",
-      "Set the scene by mentioning what morning superhero activity you're currently in the middle of (e.g. brewing espresso with a green spark, stretching on a roof, dodging sunrise traffic).",
+      "Set the scene by mentioning the specifically assigned morning activity, not a default coffee or rooftop scene.",
       "A funny, unbothered superhero or crypto observation/joke.",
       "An engaging question or degen check-in (coffee count, bag status, 3am trading mistakes).",
     ],
     tone: "Punchy, funny, bold, superhero swagger with broke-barista heart. Zero corporate speak.",
-    imageMood: "Golden-hour dawn. Warm peach and gold sunrise light, long shadows, emerald glow, city waking up.",
+    imageMood: "Morning light appropriate to the assigned location and lighting direction, with restrained emerald accents.",
     formats: [
       { id: "hero-routine", name: "Hero Morning Shift", how: "Fart Girl reacting to overnight chart chaos before her first coffee, dodging red candles." },
       { id: "degen-checkin", name: "Degen Wake-Up Call", how: "Playfully roasting whoever stayed up trading until 4am, asking how their bags survived." },
@@ -61,7 +139,7 @@ const DAILY_POST_BRIEFS = {
     label: "Good day (midday check-in)",
     greeting: "Hope your day's going well",
     greetingPattern: /\b(good day|gd|good afternoon|afternoon|hope your day|how'?s your day|how is your day)\b/i,
-    activityTheme: "Daytime patrol & lunch break: sitting on a fire escape eating street tacos or a slice of pizza, sneaking a glance at Solana charts between saving civilians, dodging mid-day city traffic with an emerald boost, having an argument with an over-leveraged villain over lunch, or laughing off mid-afternoon chart chop.",
+    activityTheme: "Use the assigned daytime activity and location; mix helpful missions, hobbies, training, and lunch-break mishaps.",
     mission: "A midday comedic boost. Check in on how everyone's day is going, drop a witty take on whatever Crypto Twitter is losing its mind over, and break up the afternoon slump with superhero humor.",
     research: [
       "The biggest drama, meme, or hot topic blowing up on Crypto Twitter today.",
@@ -70,12 +148,12 @@ const DAILY_POST_BRIEFS = {
     ],
     mustInclude: [
       "Warm midday greeting in the first line.",
-      "Set the scene with your daytime patrol or lunch break activity (e.g. eating tacos on a ledge, watching charts between saving citizens).",
+      "Set the scene with the specifically assigned daytime activity rather than an interchangeable city patrol.",
       "A funny, relatable observation about the midday crypto grind.",
       "A cheeky question or prompt for lunch-break traders to reply to.",
     ],
     tone: "Playful, witty, charming, cheeky. The superhero friend dropping by during your lunch break.",
-    imageMood: "Bright midday daylight, clear blue sky, bustling city streets, crisp high sun, her emerald glow popping against daylight.",
+    imageMood: "Daylight appropriate to the assigned location and lighting direction; no compulsory streets or skyline.",
     formats: [
       { id: "lunch-break", name: "Midday Patrol", how: "Lena on a lunch break checking the charts and wondering if villains ever take naps." },
       { id: "timeline-drama", name: "CT Drama Check", how: "Hilariously summarizing the dumbest thing Crypto Twitter is fighting over today." },
@@ -88,8 +166,8 @@ const DAILY_POST_BRIEFS = {
     label: "Good night",
     greeting: "GN",
     greetingPattern: /\b(gn|good night|goodnight|nighty night)\b/i,
-    activityTheme: "Night watch & rooftop wind-down: perched on a high gargoyle or rooftop edge under the moonlight and neon skyline, kicking combat boots over the drop, sipping chamomile tea or hot cocoa with emerald steam, recharging suit glow, staring at the moon and dreaming of $1B, or telling degens to close charts and go to sleep.",
-    mission: "Tuck the degens in with a funny, warm superhero night-cap. Roast everyone who won't close their charts, share a rooftop reflection, and remind the community of the long game with a laugh.",
+    activityTheme: "Use the assigned nighttime activity and location; include quiet indoor routines and unusual night missions, not default rooftop poses.",
+    mission: "Tuck the degens in with a funny, warm superhero night-cap. Roast everyone who won't close their charts, share a reflection from the assigned activity, and remind the community of the long game with a laugh.",
     research: [
       "How the crypto day wrapped up (chaos, chop, or madness?).",
       "The funniest community moments or memes from today.",
@@ -97,14 +175,14 @@ const DAILY_POST_BRIEFS = {
     ],
     mustInclude: [
       "Say GN clearly in the first or last line.",
-      "Set the scene with your rooftop night watch or cozy late-night wind-down activity.",
+      "Set the scene with the specifically assigned nighttime activity and its actual setting.",
       "A hilarious or warm closing thought on today's crypto circus, reminding the community we're in this for the long game.",
       "A cheeky order to close the charts and get some sleep while you take the night shift.",
     ],
-    tone: "Cozy, witty, reflective, superhero sitting on a rooftop under the stars. Warm family vibe.",
-    imageMood: "Night. Deep indigo and teal sky, moonlight, city neon, rooftop or skyline, her emerald glow as the brightest light in the frame. Cosy or cinematic.",
+    tone: "Cozy, witty, reflective, off-duty superhero warmth wherever the assigned activity takes her.",
+    imageMood: "Nighttime lighting appropriate to the assigned setting; interiors are welcome and city neon is not required.",
     formats: [
-      { id: "rooftop-debrief", name: "Rooftop Debrief", how: "Sitting with tea on a skyscraper edge, laughing at today's candle action." },
+      { id: "rooftop-debrief", name: "Evening Debrief", how: "Laughing at today's candle action while doing the assigned evening activity." },
       { id: "sleep-police", name: "Degen Bedtime", how: "Roasting the holders still watching the 1-minute chart at midnight." },
       { id: "night-watch", name: "Night Watch", how: "Fart Girl taking the night shift so the community can rest their eyes." },
       { id: "long-game", name: "Big Picture Laugh", how: "Reminding the community why we hold ($1B dream, little sister energy), laughing through the swings." },
@@ -136,8 +214,11 @@ function pickFormat(formats, recentSameType) {
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
-async function generateDraft({ type, brief, now, record }) {
-  const recent = await listRecentDailyPosts(12);
+async function generateDraft({ type, brief, now, record, previousDirection, previousScene }) {
+  const recent = await listRecentDailyPosts(120);
+  const clock = getDublinClock(now);
+  const visualDirection = pickVisualDirection(type, recent, previousDirection, clock);
+  const selectedBrief = { ...brief, activityTheme: visualDirection.activity, imageMood: visualDirection.lighting };
   const format = pickFormat(brief.formats, recent.filter((item) => item.type === type));
   const coinFocus = pickWeighted(COIN_FOCUS);
   const market = await getMarketSnapshot();
@@ -146,17 +227,18 @@ async function generateDraft({ type, brief, now, record }) {
   record("research", "started", { format: format.id, coinFocus: coinFocus.id });
   const draft = await researchAndWritePost({
     type,
-    brief,
+    brief: selectedBrief,
+    visualDirection,
     format,
     coinFocus,
-    clock: getDublinClock(now),
+    clock,
     marketBlock: formatMarketSnapshot(market),
     recent,
     maxChars: DAILY_POST_MAX_CHARS,
   });
   record("research", "ok", { headline: draft.headline, citations: draft.citations.length });
 
-  const text = await finalizePostText(draft.text, brief, DAILY_POST_MAX_CHARS);
+  const text = await finalizePostText(draft.text, selectedBrief, DAILY_POST_MAX_CHARS);
   record("text", "ok", { length: text.length });
 
   return {
@@ -169,8 +251,9 @@ async function generateDraft({ type, brief, now, record }) {
     citations: draft.citations,
     text,
     scene: draft.scene,
+    visualDirection,
     altText: draft.altText || `Fart Girl, the emerald superhero, in today's ${brief.label.toLowerCase()} scene.`,
-    imagePrompt: buildDailyPostImagePrompt({ scene: draft.scene, imageMood: brief.imageMood }),
+    imagePrompt: buildDailyPostImagePrompt({ scene: draft.scene, imageMood: visualDirection.lighting, visualDirection, recentScenes: [previousScene, ...recent.slice(0, 12).map((post) => post.scene)] }),
     market,
   };
 }
@@ -242,6 +325,8 @@ async function handle(request) {
   let post = null;
   let posted = false;
   let result = null;
+  let previousDirection = null;
+  let previousScene = null;
 
   try {
     if (preview) {
@@ -251,6 +336,8 @@ async function handle(request) {
         return Response.json({ ok: true, traceId, logs, skipped: true, postKey, publishStatus: existing.publishStatus, tweetId: existing.tweetId || null });
       }
       result = regenerate ? null : existing?.draft || null;
+      previousDirection = existing?.draft?.visualDirection;
+      previousScene = existing?.draft?.scene;
     } else {
       record("x-account", "started");
       await assertExpectedXAccount();
@@ -264,19 +351,33 @@ async function handle(request) {
       }
       record("claim", "ok", { postKey, attempt: post.publishAttempts });
       result = regenerate ? null : post.draft || null;
+      previousDirection = post.draft?.visualDirection;
+      previousScene = post.draft?.scene;
+    }
+
+    if (result) {
+      if (result.visualDirection?.characterId !== DAILY_POST_CHARACTER.id
+        || !result.visualDirection?.permittedDays?.includes(getDublinClock(now).weekday)) {
+        record("draft", "creative-refresh-required", { reason: "Legacy character references or scene not permitted today." });
+        result = null;
+      }
     }
 
     if (result) {
       result = { ...result };
+      result.text = normalizePostText(result.text);
       record("draft", "reused", { generatedAt: result.generatedAt, hasImage: Boolean(result.imageUrl) });
       if (regenerateImage) {
-        // Rebuild from the saved scene so image-prompt changes apply.
-        result.imagePrompt = buildDailyPostImagePrompt({ scene: result.scene, imageMood: brief.imageMood });
+        const recent = await listRecentDailyPosts(120);
+        result.visualDirection = pickVisualDirection(type, recent, result.visualDirection, getDublinClock(now));
+        result.scene = result.visualDirection.activity;
+        result.altText = `Fart Girl: ${result.visualDirection.activity}`;
+        result.imagePrompt = buildDailyPostImagePrompt({ scene: result.scene, imageMood: result.visualDirection.lighting, visualDirection: result.visualDirection, recentScenes: recent.slice(0, 12).map((item) => item.scene) });
         delete result.imageUrl;
         record("image", "regenerate-requested");
       }
     } else {
-      result = await generateDraft({ type, brief, now, record });
+      result = await generateDraft({ type, brief, now, record, previousDirection, previousScene });
     }
 
     if (preview && !previewImage) {
@@ -291,7 +392,7 @@ async function handle(request) {
       record("image", "reused", { url: result.imageUrl });
     } else {
       record("image-generation", "started");
-      image = await generateComicImage(result.imagePrompt, DAILY_POST_REFERENCES, {
+      image = await generateComicImage(result.imagePrompt, selectDailyPostReferences(result.visualDirection), {
         aspectRatio: process.env.DAILY_POST_IMAGE_ASPECT || "1:1",
         model: process.env.DAILY_POST_IMAGE_MODEL || undefined,
       });

@@ -1,7 +1,9 @@
 import { put } from "@vercel/blob";
 
-import comicManifest from "@/app/assets/comic_manifest";
 import { FARTBOY_CA, FARTGIRL_CA } from "@/lib/daily-posts/market";
+import { DAILY_POST_CHARACTER, DAILY_POST_COSTUMES } from "@/lib/daily-posts/references";
+
+export { DAILY_POST_REFERENCES } from "@/lib/daily-posts/references";
 
 const XAI_BASE_URL = "https://api.x.ai/v1";
 
@@ -10,15 +12,6 @@ export const DAILY_POST_MAX_CHARS = Number(process.env.DAILY_POST_MAX_CHARS || 2
 function textModel() {
   return process.env.DAILY_POST_TEXT_MODEL || process.env.COMIC_RECAP_MODEL || "grok-4.3";
 }
-
-const REFERENCE_USES = {
-  fartgirl_hero: "SUIT LOCK — match this exact suit design, colours, mask, gloves and boots. The only addition is the FART GIRL chest emblem.",
-  lena_face: "FACE LOCK — this is her face. Match face shape, brows, brown eyes, left-eyebrow scar, messy low bun.",
-};
-
-export const DAILY_POST_REFERENCES = (comicManifest.items || [])
-  .filter((item) => REFERENCE_USES[item.id] && item.url)
-  .map(({ id, file, url }) => ({ id, file, url, use: REFERENCE_USES[id] }));
 
 const SYSTEM_PROMPT = `You are Fart Girl herself (@FARTGIRL1D) — Lena Cole in the future timeline where she's the world's most beloved, chaotic superhero, powered by luminous emerald gas, living right in the trenches with the crypto degen community.
 
@@ -30,7 +23,7 @@ CANON & LORE (weave in naturally, never lecture)
 - You are Fart Girl, Solana's emerald hero.
 - Little sister coin to $FARTBOY (Solana). Fart Boy hit $200M peak; you reached ~$20M peak on Feb 10 2025. The community goal is the $1B market cap / $1 mark. You love poking fun at big bro Fart Boy with playful sibling rivalry.
 - Coins Kid is a legendary family ally — never tag him, quote him, or make promises for him, but give a nod to the family if relevant.
-- You have an official comic running (PROJECT CHLORIS) about your origin as a broke barista in Kettle City. In THESE daily posts, you're living in the future: celebrity superhero, saving cities, hanging out on rooftops, laughing at chart madness with holders, and turning panic into community hype.
+- You have an official comic running (PROJECT CHLORIS) about your origin as a broke barista in Kettle City. THESE daily posts use a separate glamorous adult character design: wealthy, single, beautiful, globally famous, loved by the public, living in the city. You still have warmth and wit, but you are not struggling to afford breakfast. Rescue people and animals, meet fans, train, enjoy success and have a private life. Follow the assigned activity and location; never substitute a generic rooftop or skyline.
 
 VOICE & PERSONALITY — THE 4 PILLARS
 1. UNBOTHERED & CONFIDENT WHEN BLEEDING:
@@ -42,9 +35,10 @@ VOICE & PERSONALITY — THE 4 PILLARS
    - Talk to holders like your squad sitting on the fire escape with you. "Fam", "Degens", "Besties". 
    - ALWAYS close with an interactive question or playful challenge that makes people physically want to reply (e.g., "Drop your coping mechanism in the replies", "Who else is awake checking 1m candles right now?", "Tell me your worst trade today so I can feel better about dropping my coffee").
 4. TIME-OF-DAY HERO LIFE (MUST BE REFLECTED IN POST & SCENE):
-   - MORNING (GM): You are doing morning superhero things — groggily waking up, brewing coffee with an emerald spark, stretching on a gargoyle, yawning while checking overnight chart madness in bed with one eye open, groggily dodging pigeons on your sunrise warm-up flight.
-   - MIDDAY (GD): You are on daytime patrol / lunch break — perched on a fire escape eating street tacos or a sandwich, sneaking a glance at your Solana app between saving citizens, dealing with afternoon chop with a laugh, stuck in mid-air traffic.
-   - NIGHT (GN): You are winding down / on night watch — sitting on a rooftop edge kicking your boots under the moon, sipping hot cocoa with emerald steam, recharging your suit's glow, looking at the city lights, telling degens to close their charts and go to sleep because you're taking the night shift.
+  - MORNING (GM): Follow the specifically assigned morning task and its setting, with wake-up energy and morning humor.
+  - MIDDAY (GD): Follow the specifically assigned daytime task and its setting, with playful midday check-in energy.
+  - NIGHT (GN): Follow the specifically assigned nighttime task and its setting, with cozy or night-mission humor.
+  - The assigned activity, composition, expression, and lighting override generic examples, format names, or earlier recurring motifs. Do not move every task onto a roof, street, or city balcony.
 
 ACCOUNT SAFETY (protect the account)
 - No links. No @mentions. No contract address. Max 2 hashtags (e.g. #FartGirl #Solana). Max 2 cashtags (e.g. $FARTGIRL).
@@ -60,8 +54,10 @@ LAYOUT & FORMAT
 
 IMAGE SCENE
 - Describe ONE single cinematic illustration (not a comic page, no panels) in 60-110 words: what Fart Girl is doing in this superhero moment, where, and how it visually captures the vibe.
-- She is heroic, stunning, adult woman, confident, chest emblem "FART GIRL" clearly built into the suit, luminous emerald gas energy swirling from her hands or aura.
-- Fun, heroic, cinematic situations (e.g. perched on a skyscraper sipping coffee, laughing at a flying holographic chart, soaring above a sunny street, sitting on a rooftop under the moon).
+- She is a glamorous, strikingly beautiful adult woman in the selected reference design. Follow the assigned fitted superhero costume OR stylish off-duty clothes, never merge the three costumes. The FART GIRL emblem belongs on superhero suits, not mandatory on casual clothes. Use emerald energy, optionally with reference-matched purple accents, only when the task calls for it.
+- Use the actual supplied Dublin weekday for social context. Friday/Saturday clubbing only when assigned; never move a scene to a disallowed day. Do not invent real celebrity appearances or claim fictional rescues are verified news. An assigned sunset can be an earlier-evening reflection, not a claim the sun sets at the GN posting time.
+- Respect the scene logistics: where objects come from and go afterward, safe support points, civilian positions, access and costume practicality. No mug on a crane, food in flight, loose cape in machinery, random magic repairs or powers for ordinary eating. Crime scenes are cinematic, non-graphic protection and restraint, not injuries or weapon instructions.
+- Stage the exact assigned activity, place, working body posture, camera composition, expression, and light. Vary the silhouette, foreground objects, depth, and focal point. Do not add charts, mugs, neon skylines, flying poses, or a front-facing hero stance unless the assigned activity actually needs them.
 
 OUTPUT: JSON only, no markdown fences, exactly this shape:
 {
@@ -78,6 +74,7 @@ function formatRecentPosts(recent) {
   return recent.map((post) => [
     `- [${post.date} ${post.type}] format="${post.format || "?"}" headline="${post.headline || "?"}" topics=${JSON.stringify(post.topics || [])}`,
     `  scene: ${String(post.scene || "").slice(0, 160)}`,
+    `  visual direction: ${JSON.stringify(post.visualDirection || post.draft?.visualDirection || {})}`,
     `  text: ${String(post.text || "").replace(/\s+/g, " ").slice(0, 200)}`,
   ].join("\n")).join("\n");
 }
@@ -86,12 +83,15 @@ function isoDay(date) {
   return date.toISOString().slice(0, 10);
 }
 
-function buildUserPrompt({ type, brief, format, coinFocus, clock, marketBlock, recent, maxChars }) {
+function buildUserPrompt({ type, brief, format, coinFocus, clock, marketBlock, recent, maxChars, visualDirection }) {
   return [
     `POST TYPE: ${type} — ${brief.label}`,
     `NOW: ${clock.weekday} ${clock.date}, ${clock.time} Irish time (Europe/Dublin).${clock.isWeekend ? " It is the weekend: stock markets are closed, crypto never sleeps." : ""}`,
     "",
     `HERO'S TIME-OF-DAY ACTIVITY: ${brief.activityTheme}`,
+    `MANDATORY VISUAL DIRECTION: ${JSON.stringify(visualDirection || {})}`,
+    `WEEKDAY CONTEXT: ${clock.weekday}. The selected scene's permitted days are binding. Let this actual weekday influence the joke and social atmosphere, not replace the assignment.`,
+    "Describe this exact task and location in both the post and scene. Format examples are humor guidance only; they must not replace this visual assignment.",
     `MISSION: ${brief.mission}`,
     `REQUIRED GREETING: ${brief.greeting}`,
     `RESEARCH WINDOW: ${brief.researchWindow}`,
@@ -224,11 +224,16 @@ export function xWeightedLength(text) {
   return length;
 }
 
+export function normalizePostText(text) {
+  return String(text).replace(/\u2014/g, "-");
+}
+
 const HARD_BANNED = /\b(guarantee[ds]?|risk[- ]free|can'?t lose|\d{3,}x|airdrop|giveaway|dm (me|us)|send (sol|eth|btc)|poop|toilet|diarrh\w*|anus|as an ai)\b/i;
 
 export function validatePostText(text, brief, maxChars) {
   const issues = [];
   if (!text) issues.push("Post is empty.");
+  if (text.includes("\u2014")) issues.push("Contains an em dash; replace it with standard punctuation.");
   if (xWeightedLength(text) > maxChars) issues.push(`Too long: ${xWeightedLength(text)} weighted chars, max ${maxChars}.`);
   if (!brief.greetingPattern.test(text)) issues.push(`Missing the required greeting (${brief.greeting}).`);
   if (/https?:\/\/|www\./i.test(text)) issues.push("Contains a link; remove it.");
@@ -279,7 +284,7 @@ async function rewritePost({ text, issues, brief, maxChars }) {
     throw new Error(`xAI rewrite failed (${response.status}): ${(await response.text()).slice(0, 300)}`);
   }
   const payload = await response.json();
-  return String(parseJson(payload?.choices?.[0]?.message?.content)?.text || "").trim();
+  return normalizePostText(String(parseJson(payload?.choices?.[0]?.message?.content)?.text || "").trim());
 }
 
 function trimToLength(text, maxChars) {
@@ -317,6 +322,7 @@ export async function finalizePostText(draft, brief, maxChars = DAILY_POST_MAX_C
       .replace(/(^|[\s(])@(\w)/g, "$1$2")
       .split(FARTGIRL_CA).join("")
       .split(FARTBOY_CA).join("")
+      .replace(/\u2014/g, "-")
       .trim();
     if (!brief.greetingPattern.test(text)) text = `${brief.greeting}\n\n${text}`;
     text = trimToLength(text, maxChars);
@@ -326,26 +332,39 @@ export async function finalizePostText(draft, brief, maxChars = DAILY_POST_MAX_C
   if (issues.length) {
     throw new Error(`Post failed safety validation: ${issues.join(" ")}`);
   }
-  return text;
+  return normalizePostText(text);
 }
 
-export function buildDailyPostImagePrompt({ scene, imageMood }) {
+export function buildDailyPostImagePrompt({ scene, imageMood, visualDirection, recentScenes = [] }) {
+  const costume = DAILY_POST_COSTUMES.find((item) => item.id === visualDirection?.costumeId) || DAILY_POST_COSTUMES[0];
+  const offDuty = visualDirection?.wardrobe === "off-duty";
   return [
     "FART GIRL — DAILY KEY ART. Future timeline: the comic is over and she is the most famous superhero on Earth, living in today's real world.",
     "STYLE: ONE single cinematic illustration, NOT a comic page — no panels, no gutters, no captions, no speech balloons. Bold confident ink linework, modern premium comic-book colouring, painterly lighting, rich depth, crisp focus on her.",
     [
-      "CHARACTER LOCK (match the reference images exactly):",
-      "- Lena Cole / Fart Girl, adult woman in her early twenties. Warm olive skin, oval face, straight dark brows, brown eyes, small straight nose, faint nick scar through the LEFT eyebrow, dark brown almost-black hair in a MESSY LOW BUN with a few loose strands.",
-      "- Athletic, real proportions, heroic and confident. Not pin-up, not a child.",
-      "- Simple dark-green eye MASK covering ONLY the eyes. Matte emerald bodysuit #0B6B3A with forest-green panels #0E3D24 on ribs, forearms and shins, thin luminous mint seam-lines #3DFF88 like glowing veins, fingerless gloves, low practical boots. NO cape, NO heels, NO cleavage window.",
-      "- NEW IN THIS TIMELINE: the words \"FART GIRL\" are BUILT INTO the suit across the upper chest, never a flat sticker or printed text on top. The emblem is a moulded, slightly raised forest-green chest plate that is part of the suit's panelling; the letters are formed by the same luminous mint #3DFF88 seam-lines that run through the rest of the suit, in bold rounded comic lettering. It wraps around the curve of her chest and ribs, follows the fabric folds, catches the same light and shadow as the suit, and the seams flow into it seamlessly. Clearly legible and spelled exactly F-A-R-T G-I-R-L.",
-      "- Hero state: no earrings.",
+      "CHARACTER LOCK (daily celebrity references only, not the comic character sheets):",
+      DAILY_POST_CHARACTER.timeline,
+      DAILY_POST_CHARACTER.appearance,
+      offDuty ? `OFF-DUTY WARDROBE: ${visualDirection.clothes}. References lock face and hair ONLY; do not copy their superhero outfit, cape, gas or pose. No compulsory chest emblem on civilian clothing.` : `COSTUME LOCK: ${costume.garment} COLOURS: ${costume.colours.join(", ")}. ${DAILY_POST_CHARACTER.emblem} Use only this costume family and selected reference's subtle purple accents, if any.`,
+      "Attractive, confident fashion-editorial presence with natural task-led posture; fully clothed, non-explicit, no voyeuristic angles. Match the references, not a newly invented face or forced comic low bun.",
     ].join("\n"),
-    "POWERS: luminous emerald-mint energy mist, shock-rings and electric vapour #3DFF88 swirling from her hands, aura or flight trail. Glowing, magical, chlorophyll-lightning feel. NEVER brown, never from her rear, nothing bodily.",
+    "POWERS: luminous emerald energy, with small purple accents only if supported by the selected reference. Only where the task needs powers; no aura for meals, photos, dancing or rest. Gas in a reference does not require gas in the scene. No repeated hand-glow, brown clouds or bodily depiction.",
+    ...(visualDirection ? [
+      "MANDATORY SCENE ASSIGNMENT: the following activity and visual staging take precedence over conflicting scene details or habitual superhero imagery.",
+      `ACTIVITY AND LOCATION: ${visualDirection.activity}`,
+      `ACTUAL WEEKDAY: ${visualDirection.weekday}. PERMITTED DAYS: ${(visualDirection.permittedDays || []).join(", ")}.`,
+      `PRACTICAL STAGING: ${visualDirection.logistics}`,
+      `WARDROBE: ${visualDirection.clothes}`,
+      `CAMERA AND COMPOSITION: ${visualDirection.composition}`,
+      `EXPRESSION AND BODY LANGUAGE: ${visualDirection.expression}`,
+      `ASSIGNED LIGHTING: ${visualDirection.lighting}`,
+      "Keep her hands, gaze, weight distribution, props, and body silhouette consistent with this actual task. No stock hands-on-hips, centered front-facing stance, floating heroic pose, rooftop, skyline, coffee mug, or chart display unless specifically required by this assignment.",
+    ] : []),
     `LIGHTING & MOOD: ${imageMood}`,
     `SCENE: ${scene}`,
-    "TEXT IN IMAGE: only the FART GIRL chest emblem plus at most one short in-scene text of 4 words or fewer if the scene asks for it. No watermark, no title, no signature, no real brand logos.",
-    "NEGATIVE: comic page layout, panels, gutters, speech bubbles, chibi, child, anime waifu, pin-up, sexy pose, cape, high heels, cleavage cutout, brown cloud, toilet humour, misspelled emblem, flat text overlay on the chest, sticker-like logo, floating or pasted-on lettering, earrings, extra unnamed superheroes, real celebrity likeness, different hair colour, blonde, red hair, changed face, photoreal, 3D render, watermark.",
+    ...(recentScenes.filter(Boolean).length ? [`AVOID RECREATING THESE RECENT SCENES, THEIR POSES, LOCATIONS, AND CAMERA STAGING:\n${recentScenes.filter(Boolean).map((value) => `- ${String(value).slice(0, 1200)}`).join("\n")}`] : []),
+    "TEXT IN IMAGE: the FART GIRL chest emblem on superhero costumes only, plus at most one short in-scene text of 4 words or fewer if the scene asks for it. Off-duty clothing needs no emblem. No watermark, no title, no signature, no real brand logos.",
+    "NEGATIVE: comic page layout, panels, gutters, speech bubbles, chibi, child, nudity, explicit pose, costume mashup, comic barista design, brown cloud, toilet humour, graphic injury, gore, unsafe civilians, impossible prop handling, misspelled emblem, sticker-like lettering, extra unnamed superheroes, real celebrity likeness, changed face or hair colour, photoreal, 3D render, watermark.",
   ].join("\n\n");
 }
 
