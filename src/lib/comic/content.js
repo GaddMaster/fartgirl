@@ -108,7 +108,7 @@ export async function generateDailyRecap(pages) {
       messages: [
         {
           role: "system",
-          content: "Write concise X recap posts for PROJECT CHLORIS. Return JSON only, shaped exactly as {\"text\": \"...\"} with no other keys. Keep the voice intimate, cinematic, and grounded. Use 2-4 short lines separated by blank lines. Add at most two fitting emojis at line ends. End with #FartGirl #ProjectChloris. Do not add a title; the publisher adds it. Never mention AI, prompts, page numbers, or meta commentary.",
+          content: "Write concise X recap posts for PROJECT CHLORIS. Return JSON only, shaped exactly as {\"text\": \"...\"} with no other keys. Keep the voice intimate, cinematic, and grounded. Use 2-4 short lines separated by blank lines. Never use an em dash (U+2014). Use a comma, colon, semicolon, or regular hyphen instead. Add at most two fitting emojis at line ends. End with #FartGirl #ProjectChloris. Do not add a title; the publisher adds it. Never mention AI, prompts, page numbers, or meta commentary.",
         },
         {
           role: "user",
@@ -136,6 +136,7 @@ export async function generateDailyRecap(pages) {
   const summary = String(parsedText || raw)
     .replace(/^```(?:json)?\s*/i, "")
     .replace(/```$/i, "")
+    .replace(/\u2014/g, "-")
     .replace(/\r?\n+/g, "\n\n")
     .trim();
   if (!summary) {

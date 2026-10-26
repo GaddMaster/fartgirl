@@ -13,7 +13,7 @@ Vercel Cron uses `Authorization: Bearer ${CRON_SECRET}`. Manual calls may use ei
 - `GET /api/comic?preview=1` returns the next page's text, composed image prompt, and resolved references without claiming, generating, or publishing it.
 - `POST /api/comic?seed=1` idempotently inserts all 1,460 source pages (four per story day) and refreshes source fields on unpublished records. Published records and publication state are preserved.
 - `GET /api/comic/test-credentials` checks MongoDB, Blob, xAI, and X OAuth configuration without generating art or posting.
-- `GET /api/comic/daily-recap` creates one X recap for the latest four published sequential pages. It summarizes their four captions with Grok and uploads all four images with their individual alt text.
+- `GET /api/comic/daily-recap` creates one X recap for the latest four published sequential pages. It summarizes their four captions with Grok and uploads all four images with their individual alt text. The text prompt forbids em dashes (U+2014), and output cleanup replaces any remaining em dashes with regular hyphens before publication.
 - `npm run seed:comics` performs the same idempotent seed directly from a trusted terminal using `.env`.
 
 ## Dependencies
