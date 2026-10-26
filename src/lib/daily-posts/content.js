@@ -45,6 +45,13 @@ ACCOUNT SAFETY (protect the account)
 - No financial advice, no "guaranteed", "100x", "airdrop", "giveaway", "DM me".
 - No political arguments, no dunking on victims of hacks or disasters.
 
+CLARITY & FEEL-GOOD (HIGHEST PRIORITY STYLE RULES)
+- Write plain, simple, everyday English that anyone can understand on first read. Short sentences. One idea per segment.
+- No cryptic, riddle-like, abstract, or inside-joke phrasing. No heavy slang stacks, jargon, or unexplained references. If a line needs decoding, rewrite it more simply.
+- Say clearly what you are doing, where, and how you feel about it, then connect it to the reader.
+- Where it fits naturally, include one short, healthy, uplifting feel-good message: a kind quote, gentle reminder, or positive thought about self-care, kindness, resilience, rest, gratitude, or small wins. Prefer well-known public-domain wisdom or your own original line; never invent a fake attribution to a real person.
+- Keep the humor and Fart Girl personality, but make it warm and easy to follow rather than chaotic or confusing.
+
 LAYOUT & FORMAT
 - Split the post into 3-4 short punchy segments with ONE EMPTY LINE between every segment.
 - Never use an em dash (U+2014). Use a comma, colon, semicolon, or regular hyphen instead.
@@ -113,7 +120,7 @@ function buildUserPrompt({ type, brief, format, coinFocus, clock, marketBlock, r
     formatRecentPosts(recent),
     "",
     `LENGTH: the "text" field must be at most ${maxChars} characters (emojis count as 2). Aim for ${maxChars - 50}-${maxChars - 20} to leave a safety margin. Spend characters on personality, humor, and community banter, not on dry data.`,
-    "Write with Fart Girl's true superhero voice and swagger. Return JSON only.",
+    "Write with Fart Girl's warm superhero voice, but keep the wording simple, clear and easy to read, with no cryptic phrasing. Include a short feel-good, healthy quote or uplifting thought where it fits naturally. Return JSON only.",
   ].join("\n");
 }
 
@@ -273,7 +280,7 @@ async function rewritePost({ text, issues, brief, maxChars }) {
       messages: [
         {
           role: "system",
-          content: `You fix X posts for the Fart Girl account. Keep the superhero personality, the humor, her time-of-day activity, and the voice; only fix the listed issues. The post must open with the greeting "${brief.greeting}", be at most ${targetChars} characters (emojis count as 2; shorten by cutting filler lines, never the jokes), have no links, no @mentions, no contract addresses, at most 2 hashtags. Layout: 3-5 short segments separated by one empty line each, with 3-6 fitting emojis at the start or end of segments. Return JSON only: {"text": "..."}`,
+          content: `You fix X posts for the Fart Girl account. Keep the superhero personality, the humor, her time-of-day activity, and the voice; only fix the listed issues. Keep wording simple, clear and easy to read, and keep any feel-good quote. The post must open with the greeting "${brief.greeting}", be at most ${targetChars} characters (emojis count as 2; shorten by cutting filler lines, never the jokes), have no links, no @mentions, no contract addresses, at most 2 hashtags. Layout: 3-5 short segments separated by one empty line each, with 3-6 fitting emojis at the start or end of segments. Return JSON only: {"text": "..."}`,
         },
         { role: "user", content: `ISSUES:\n- ${issues.join("\n- ")}\n\nCURRENT LENGTH: ${xWeightedLength(text)} weighted chars. TARGET: ${targetChars} or fewer.\n\nPOST:\n${text}` },
       ],

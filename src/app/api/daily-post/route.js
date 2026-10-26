@@ -124,8 +124,9 @@ const DAILY_POST_BRIEFS = {
       "Set the scene by mentioning the specifically assigned morning activity, not a default coffee or rooftop scene.",
       "A funny, unbothered superhero or crypto observation/joke.",
       "An engaging question or degen check-in (coffee count, bag status, 3am trading mistakes).",
+      "Where it fits, a short feel-good line or healthy quote (positive start to the day, self-care, kindness). Say everything in clear, simple language.",
     ],
-    tone: "Punchy, funny, bold, superhero swagger with broke-barista heart. Zero corporate speak.",
+    tone: "Simple, clear, upbeat and warm with light humor. Plain everyday words, easy to understand at a glance, no cryptic or riddle-like lines.",
     imageMood: "Morning light appropriate to the assigned location and lighting direction, with restrained emerald accents.",
     formats: [
       { id: "hero-routine", name: "Hero Morning Shift", how: "Fart Girl reacting to overnight chart chaos before her first coffee, dodging red candles." },
@@ -151,8 +152,9 @@ const DAILY_POST_BRIEFS = {
       "Set the scene with the specifically assigned daytime activity rather than an interchangeable city patrol.",
       "A funny, relatable observation about the midday crypto grind.",
       "A cheeky question or prompt for lunch-break traders to reply to.",
+      "Where it fits, a short feel-good line or healthy quote (take a break, drink water, be kind to yourself). Say everything in clear, simple language.",
     ],
-    tone: "Playful, witty, charming, cheeky. The superhero friend dropping by during your lunch break.",
+    tone: "Friendly, clear, playful and encouraging. Plain everyday words, easy to understand at a glance, no cryptic or riddle-like lines.",
     imageMood: "Daylight appropriate to the assigned location and lighting direction; no compulsory streets or skyline.",
     formats: [
       { id: "lunch-break", name: "Midday Patrol", how: "Lena on a lunch break checking the charts and wondering if villains ever take naps." },
@@ -178,8 +180,9 @@ const DAILY_POST_BRIEFS = {
       "Set the scene with the specifically assigned nighttime activity and its actual setting.",
       "A hilarious or warm closing thought on today's crypto circus, reminding the community we're in this for the long game.",
       "A cheeky order to close the charts and get some sleep while you take the night shift.",
+      "Where it fits, a short feel-good line or healthy quote (rest, gratitude, small wins, tomorrow is a fresh start). Say everything in clear, simple language.",
     ],
-    tone: "Cozy, witty, reflective, off-duty superhero warmth wherever the assigned activity takes her.",
+    tone: "Cozy, calm, reflective and comforting. Plain everyday words, easy to understand at a glance, no cryptic or riddle-like lines.",
     imageMood: "Nighttime lighting appropriate to the assigned setting; interiors are welcome and city neon is not required.",
     formats: [
       { id: "rooftop-debrief", name: "Evening Debrief", how: "Laughing at today's candle action while doing the assigned evening activity." },
